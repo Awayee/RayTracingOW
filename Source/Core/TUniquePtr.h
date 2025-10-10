@@ -1,6 +1,4 @@
 #pragma once
-#include "Defines.h"
-#include <memory>
 
 template<typename T>
 struct TDefaultDeleter {
@@ -10,7 +8,8 @@ struct TDefaultDeleter {
 template<class T, class Deleter = TDefaultDeleter<T>>
 class TUniquePtr {
 public:
-	NON_COPYABLE(TUniquePtr);
+	TUniquePtr(const TUniquePtr&) = delete;
+	TUniquePtr& operator=(const TUniquePtr&) = delete;
 	TUniquePtr(): m_Ptr(nullptr) {}
 	explicit TUniquePtr(T* ptr) {
 		m_Ptr = ptr;

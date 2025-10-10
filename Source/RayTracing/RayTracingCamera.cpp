@@ -1,8 +1,8 @@
 #include "RayTracingCamera.h"
 #include "Math/MathUtil.h"
 #include "Core/Log.h"
+#include "Core/ParallelFor.h"
 #include <random>
-#include <ppl.h>
 
 #define PARALLEL_RENDERING 1
 
@@ -46,7 +46,7 @@ void RayTracingCamera::Render(const RayTracingScene* scene) {
 	// parallel rendering
 #if PARALLEL_RENDERING
 	size_t numPixel = (size_t)(m_RenderSize.X * m_RenderSize.Y);
-	Concurrency::parallel_for(0ull, numPixel, [this, sampleScale, scene](size_t pixel) {
+	ParallelFor(0ull, numPixel, [this, sampleScale, scene](size_t pixel) {
 		uint32 renderWidth = m_RenderSize.X;
 		uint32 i = (uint32)pixel % renderWidth;
 		uint32 j = (uint32)pixel / renderWidth;

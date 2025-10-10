@@ -1,6 +1,7 @@
 #pragma once
+
+#include "RayTracing/RendererInstance.h"
 #include "Core/TUniquePtr.h"
-#include "RHI/RHIDefines.h"
 
 class RayTracingScene;
 class RayTracingCamera;

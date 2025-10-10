@@ -14,6 +14,15 @@ set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Assets)
 set(THIRD_PARTY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty)
 set(SHADER_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Shaders)
 
+# set platfor
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(PLATFORM_ARCH "x64")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(PLATFORM_ARCH "x86")
+else()
+    message(FATAL_ERROR "Unsupported architecture pointer size: ${CMAKE_SIZEOF_VOID_P}")
+endif()
+
 add_definitions(
     -DPROJECT_NAME="${PROJECT_NAME}"
     -DSHADER_PATH="${SHADER_PATH}/"

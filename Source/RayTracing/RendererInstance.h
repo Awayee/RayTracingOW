@@ -1,5 +1,5 @@
 #pragma once
-#include "RHI/RHIDefines.h"
+#include "Renderer/RHICommon.h"
 
 #ifdef _WIN32
 #define D3D12_RHI
@@ -8,13 +8,13 @@
 #endif
 
 #if defined(D3D12_RHI)
-#include "RHI/D3D12RHI.h"
+#include "Renderer/Windows/D3D12RHI.h"
 using RendererType = D3D12RHI;
 #elif defined(VULKAN_RHI)
-#include "RHI/VulkanRHI.h"
+#include "Renderer/Common/VulkanRHI.h"
 using RendererType = VulkanRHI;
 #else
-#include "RHI/NullRHI.h"
+#include "Renderer/NullRHI.h"
 using RendererType = NullRHI;
 #endif
 

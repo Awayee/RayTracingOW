@@ -1,12 +1,11 @@
-#include "RayTracingApp.h"
+#include "RayTracing/RayTracingApp.h"
+#include "RayTracing/RayTracingScene.h"
+#include "RayTracing/RayTracingCamera.h"
 #include "Core/Log.h"
 #include "Core/Timer.h"
 #include "Math/Vector.h"
 #include "Math/MathUtil.h"
 #include "Math/Geometry.h"
-#include "RayTracing/RayTracingScene.h"
-#include "RayTracing/RayTracingCamera.h"
-#include "RendererInstance.h"
 
 namespace {
 	// print the cost

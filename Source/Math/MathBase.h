@@ -30,20 +30,13 @@ namespace Math {
 	template<typename T> T Floor(T x) { return (T)std::floor(x); }
 
 	// triangle func
-#ifdef MATH_DEG
-#define TRI_FUNC(func, f){ return func(f * Deg2Rad); }
-#define ATRI_FUNC(func, f) { return func(f * Deg2Rad); }
-#else
-#define TRI_FUNC(func, f){ return func(f);}
-#define ATRI_FUNC(func, ...) { return func( ##__VA_ARGS__); }
-#endif
-	template<typename T> T Sin   (T x) TRI_FUNC (std::sin , x);
-	template<typename T> T Cos   (T x) TRI_FUNC (std::cos , x);
-	template<typename T> T Tan   (T x) TRI_FUNC (std::tan , x);
-	template<typename T> T ASin  (T x) ATRI_FUNC(std::asin, x);
-	template<typename T> T ACos  (T x) ATRI_FUNC(std::acos, x);
-	template<typename T> T ATan  (T x) ATRI_FUNC(std::atan, x);
-	template<typename T> T ATan2 (T a, T b)ATRI_FUNC(std::atan2, a, b);
+	template<typename T> T Sin   (T x)  {return std::sin(x);}
+	template<typename T> T Cos   (T x)  {return std::cos(x);}
+	template<typename T> T Tan   (T x)  {return std::tan(x);}
+	template<typename T> T ASin  (T x)  {return std::asin(x);}
+	template<typename T> T ACos  (T x)  {return std::acos(x);}
+	template<typename T> T ATan  (T x)  {return std::atan(x);}
+	template<typename T> T ATan2 (T a, T b){return std::atan2(a, b);}
 
 
 	// specialized

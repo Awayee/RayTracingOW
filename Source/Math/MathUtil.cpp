@@ -1,4 +1,5 @@
 #include "MathUtil.h"
+
 #include <random>
 
 namespace Math {
@@ -24,7 +25,7 @@ namespace Math {
 	FVector3 RandomUintVector() {
 		FVector3 result = RandomVector(-1.0f, 1.0f);
 		float lengthSq = result.LengthSquared();
-		if (lengthSq < FLT_MIN) {
+		if (lengthSq < FLOAT_MIN) {
 			result = FVector3{ 0,1,0 };
 		}
 		else if (lengthSq > 1.0f) {
