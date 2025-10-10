@@ -1,17 +1,16 @@
 #pragma once
-#include <Windows.h>
-#include <memory>
+#include "Core/TUniquePtr.h"
 #include "RHI/RHIDefines.h"
 
 class RayTracingScene;
 class RayTracingCamera;
 class RayTracingApp {
 public:
-	RayTracingApp(HINSTANCE hInstance);
+	RayTracingApp();
 	~RayTracingApp();
 	void Run();
 private:
-	std::unique_ptr<RayTracingScene> m_Scene;
-	std::unique_ptr<RayTracingCamera> m_Camera;
+	TUniquePtr<RayTracingScene> Scene;
+	TUniquePtr<RayTracingCamera> Camera;
 	RHITextureHandle Texture;
 };

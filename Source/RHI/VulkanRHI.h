@@ -12,7 +12,7 @@ class VulkanPSO;
 
 class VulkanRHI {
 public:
-	VulkanRHI(AppInstanceHandle InAppInstance, uint32 InWindowWidth, uint32 InWindowHeight);
+	VulkanRHI(uint32 InWindowWidth, uint32 InWindowHeight);
 	~VulkanRHI();
 	RHITextureHandle CreateTexture(uint32 width, uint32 height, uint16 layer, uint16 mip, ERHIFormat format);
 	void UpdateTextureData(RHITextureHandle Handle, const void* Data, size_t ByteSize);
@@ -24,7 +24,6 @@ private:
 		FRAME_IN_FLIGHT_MAX = 2,
 		WAIT_FENCE_MAX = 10000,
 	};
-	AppInstanceHandle AppInstance;
 	GLFWwindow* Window;
 	uint32 WindowWidth;
 	uint32 WindowHeight;

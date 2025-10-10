@@ -193,8 +193,8 @@ void TransitionImageLayout(VkCommandBuffer Cmd, VkImage Image, VkImageLayout Old
 	vkCmdPipelineBarrier(Cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-VulkanRHI::VulkanRHI(AppInstanceHandle InAppInstance, uint32 InWindowWidth, uint32 InWindowHeight):
-AppInstance(InAppInstance), WindowWidth(InWindowWidth), WindowHeight(InWindowHeight), bEnableDebug(true), FrameIndex(0) {
+VulkanRHI::VulkanRHI(uint32 InWindowWidth, uint32 InWindowHeight):
+WindowWidth(InWindowWidth), WindowHeight(InWindowHeight), bEnableDebug(true), FrameIndex(0) {
 	CreateGLFWWindow();
 	CreateInstance();
 	PickGPU();

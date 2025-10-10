@@ -86,28 +86,28 @@ inline void InitializeScene2(RayTracingScene* scene) {
 }
 
 
-RayTracingApp::RayTracingApp(HINSTANCE hInstance) {
+RayTracingApp::RayTracingApp() {
 	// ========== step1. Initialize context ==========
-	InitializeRenderer(hInstance, WINDOW_WIDTH, WINDOW_HEIGHT);
+	InitializeRenderer( WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	// ========== step2. Scene rendering ==========
 	// Initialize camera
 	const Math::USize renderSize{(uint32)(WINDOW_WIDTH * RENDER_SCALE), (uint32)(WINDOW_HEIGHT * RENDER_SCALE)};
-	m_Camera.reset(new RayTracingCamera(renderSize));
-	m_Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
-	m_Camera->SetFov(20 * Math::Deg2Rad);
-	m_Camera->SetFocus(10.0f, 0.6f * Math::Deg2Rad);
+	Camera.Reset(new RayTracingCamera(renderSize));
+	Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
+	Camera->SetFov(20 * Math::Deg2Rad);
+	Camera->SetFocus(10.0f, 0.6f * Math::Deg2Rad);
 	// Create ray tracing scene
-	m_Scene.reset(new RayTracingScene());
-	InitializeScene2(m_Scene.get());
+	Scene.Reset(new RayTracingScene());
+	InitializeScene2(Scene.Get());
 	// Render the scene
 	{
 		ProfilePrintScope s{ "Scene Rendering" };
-		m_Camera->Render(m_Scene.get());
+		Camera->Render(Scene.Get());
 	}
 
 	// ========== step3. Display the render texture ==========
-	RenderData renderData = m_Camera->GetRenderData();
+	RenderData renderData = Camera->GetRenderData();
 	// Create texture and upload data
 	Texture = GetRenderer()->CreateTexture(renderData.Width, renderData.Height, 1, 1, ERHIFormat::R8G8B8A8_UNorm);
 	GetRenderer()->UpdateTextureData(Texture, renderData.Data, (size_t)renderData.Width * (size_t)renderData.Height * sizeof(Math::Color8));

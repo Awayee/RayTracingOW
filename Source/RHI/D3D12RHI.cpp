@@ -101,8 +101,9 @@ inline DXGI_FORMAT Convert2DXGIFormat(ERHIFormat InFormat) {
 	}
 }
 
-D3D12RHI::D3D12RHI(AppInstanceHandle AppInstance, uint32 WindowWidth, uint32 WindowHeight) {
-	m_Window.Reset(new D3D12Window((HINSTANCE)AppInstance, WindowWidth, WindowHeight));
+D3D12RHI::D3D12RHI(uint32 WindowWidth, uint32 WindowHeight) {
+	HINSTANCE AppInstance = GetModuleHandle(0);
+	m_Window.Reset(new D3D12Window(AppInstance, WindowWidth, WindowHeight));
 	m_Window->InitMainWindow();
 	InitializeDX();
 	OnResize();

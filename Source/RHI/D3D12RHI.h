@@ -10,7 +10,7 @@ class D3D12PSO;
 
 class D3D12RHI {
 public:
-	D3D12RHI(AppInstanceHandle AppInstance, uint32 WindowWidth, uint32 WindowHeight);
+	D3D12RHI(uint32 WindowWidth, uint32 WindowHeight);
 	~D3D12RHI();
 	typedef std::function<void(ID3D12GraphicsCommandList*)> GFXCmdFunc;
 	void ExecuteDrawCall(GFXCmdFunc&& func);

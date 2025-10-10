@@ -1,7 +1,11 @@
 #pragma once
 #include "RHI/RHIDefines.h"
 
+#ifdef _WIN32
 #define D3D12_RHI
+#else
+#define VULKAN_RHI
+#endif
 
 #if defined(D3D12_RHI)
 #include "RHI/D3D12RHI.h"
@@ -14,7 +18,7 @@ using RendererType = VulkanRHI;
 using RendererType = NullRHI;
 #endif
 
-void InitializeRenderer(AppInstanceHandle AppInstance, uint32 WindowWidth, uint32 WindowHeight);
+void InitializeRenderer(uint32 WindowWidth, uint32 WindowHeight);
 
 RendererType* GetRenderer();
 
