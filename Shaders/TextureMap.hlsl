@@ -1,11 +1,6 @@
 
 //vs
 struct VSInput {};
-static float2 g_Vertices[6] = {
-	float2(-1.0, -1.0), float2(1.0, -1.0), float2(-1.0,  1.0),
-	float2(-1.0,  1.0), float2(1.0, -1.0), float2(1.0,  1.0), 
-};
-
 struct VSOutput {
     float4 SV_Pos : SV_POSITION;
     float2 UV: TEXCOORD0;
@@ -14,10 +9,16 @@ struct VSOutput {
 struct PSOutput {
     half4 outColor: SV_Target;
 };
+
+static float2 g_Vertices[6] = {
+	float2(-1.0, -1.0), float2(1.0, -1.0), float2(-1.0,  1.0),
+	float2(-1.0,  1.0), float2(1.0, -1.0), float2(1.0,  1.0), 
+};
+
 static float g_Depth = 0.5;
 
-SamplerState g_Sampler: register(s0);
-Texture2D g_Texture : register(t0);
+[[vk::binding(0, 0)]] SamplerState g_Sampler;
+[[vk::binding(1, 0)]] Texture2D g_Texture;
 
 VSOutput MainVS(VSInput vIn, uint vID: SV_VertexID) {
 	float2 v = g_Vertices[vID];

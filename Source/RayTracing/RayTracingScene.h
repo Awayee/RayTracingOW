@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include "Math/MathUtil.h"
 #include "Material.h"
 
 struct RayHitSurface{

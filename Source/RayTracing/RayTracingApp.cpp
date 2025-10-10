@@ -1,13 +1,12 @@
 #include "RayTracingApp.h"
-#include "D3D12/D3D12App.h"
 #include "Core/Log.h"
 #include "Core/Timer.h"
-#include "D3D12/Texture.h"
-#include "D3D12/Pipeline.h"
 #include "Math/Vector.h"
 #include "Math/MathUtil.h"
+#include "Math/Geometry.h"
 #include "RayTracing/RayTracingScene.h"
 #include "RayTracing/RayTracingCamera.h"
+#include "RendererInstance.h"
 
 namespace {
 	// print the cost
@@ -29,6 +28,7 @@ namespace {
 
 constexpr uint32 WINDOW_WIDTH = 800;
 constexpr uint32 WINDOW_HEIGHT = 450;
+constexpr float RENDER_SCALE = 0.2f;
 
 inline void InitializeScene(RayTracingScene* scene) {
 	auto materialGround = MaterialPtr(new LambertMaterial({0.8f, 0.8f, 0.0f, 1.0f}));
@@ -88,19 +88,11 @@ inline void InitializeScene2(RayTracingScene* scene) {
 
 RayTracingApp::RayTracingApp(HINSTANCE hInstance) {
 	// ========== step1. Initialize context ==========
-	// Initialize window
-	const Math::USize windowSize{ WINDOW_WIDTH, WINDOW_HEIGHT };
-	D3D12Window::Initialize(hInstance, windowSize);
-	if(!D3D12Window::Instance()->InitMainWindow()) {
-		LOG_ERROR("Failed to initialize main window!");
-		return;
-	}
-	// Initialize dx
-	D3D12App::Initialize();
+	InitializeRenderer(hInstance, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	// ========== step2. Scene rendering ==========
 	// Initialize camera
-	const Math::USize renderSize = windowSize;
+	const Math::USize renderSize{(uint32)(WINDOW_WIDTH * RENDER_SCALE), (uint32)(WINDOW_HEIGHT * RENDER_SCALE)};
 	m_Camera.reset(new RayTracingCamera(renderSize));
 	m_Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
 	m_Camera->SetFov(20 * Math::Deg2Rad);
@@ -116,30 +108,16 @@ RayTracingApp::RayTracingApp(HINSTANCE hInstance) {
 
 	// ========== step3. Display the render texture ==========
 	RenderData renderData = m_Camera->GetRenderData();
-	// Create PSO
-	m_PSO.reset(new PSOCommon());
 	// Create texture and upload data
-	m_Texture.reset(new Texture2D(renderData.Width, renderData.Height, 1, 1, DXGI_FORMAT_R8G8B8A8_UNORM));
-	D3D12App::Instance()->ImmediatelyCommit([this, renderData](ID3D12GraphicsCommandList* cmd) {
-		m_Texture->UpdateData(cmd, renderData.Data, renderData.Width * renderData.Height * sizeof(Math::Color8));
-	});
+	Texture = GetRenderer()->CreateTexture(renderData.Width, renderData.Height, 1, 1, ERHIFormat::R8G8B8A8_UNorm);
+	GetRenderer()->UpdateTextureData(Texture, renderData.Data, (size_t)renderData.Width * (size_t)renderData.Height * sizeof(Math::Color8));
 }
 
 RayTracingApp::~RayTracingApp() {
-	D3D12App::Release();
-	D3D12Window::Release();
+	GetRenderer()->DestroyTexture(Texture);
+	ReleaseRenderer();
 }
 
 void RayTracingApp::Run() {
-	while(D3D12Window::Instance()->Tick()) {
-		RenderTexture();
-	}
-}
-
-void RayTracingApp::RenderTexture() {
-	D3D12App::Instance()->ExecuteDrawCall([this](ID3D12GraphicsCommandList* cmd) {
-		m_PSO->Bind(cmd);
-		m_Texture->BindDesc(cmd, 0);
-		cmd->DrawInstanced(6, 1, 0, 0);
-	});
+	while(GetRenderer()->DrawTexture(Texture)){}
 }

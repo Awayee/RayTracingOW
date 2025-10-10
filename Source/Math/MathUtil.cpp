@@ -1,55 +1,54 @@
 #include "MathUtil.h"
-#include <cfloat>
+#include <random>
 
 namespace Math {
 
-	FVector3 FRay::At(float t) const {
-		return Origin + t * Direction;
+	float Random01() {
+		static std::uniform_real_distribution<float> distribution(0.0, 1.0);
+		static std::mt19937 generator;
+		return distribution(generator);
 	}
 
-	float FSphere::RayHit(const FRay& ray) const {
-		//const FVector3 oc = Center - ray.Origin;
-		//const float a = ray.Direction.Dot(ray.Direction);
-		//const float b = -2.0f * ray.Direction.Dot(oc);
-		//const float c = oc.Dot(oc) - Radius * Radius;
-		//const float discriminant = b * b - 4 * a * c;
-		//if(discriminant < 0.0f) {
-		//	return -1.0f;
-		//}
-		//return (-b - Sqrt(discriminant)) / (a * 2.0f);
-		const FVector3 oc = Center - ray.Origin;
-		const float a = ray.Direction.LengthSquared();
-		const float h = ray.Direction.Dot(oc);
-		const float c = oc.LengthSquared() - Radius * Radius;
-		const float discriminant = h * h - a * c;
-		if(discriminant < 0.0f) {
-			return -1.0f;
-		}
-		return h - Sqrt(discriminant) / a;
+	float Random(float min, float max) {
+		return min + (max - min) * Random01();
 	}
 
-	bool FSphere::RayHit(const FRay& ray, float rayMin, float rayMax, FRayHit& outHit) const {
-		const FVector3 oc = Center - ray.Origin;
-		const float a = ray.Direction.LengthSquared();
-		const float h = ray.Direction.Dot(oc);
-		const float c = oc.LengthSquared() - Radius * Radius;
-		const float discriminant = h * h - a * c;
-		if(discriminant < 0.0f) {
-			return false;
+	FVector3 Random01Vector() {
+		return FVector3{ Random01(), Random01(), Random01() };
+	}
+
+	FVector3 RandomVector(float min, float max) {
+		return FVector3{ Random(min, max), Random(min, max), Random(min, max) };
+	}
+
+	FVector3 RandomUintVector() {
+		FVector3 result = RandomVector(-1.0f, 1.0f);
+		float lengthSq = result.LengthSquared();
+		if (lengthSq < FLT_MIN) {
+			result = FVector3{ 0,1,0 };
 		}
-		const float sqrtD = std::sqrt(discriminant);
-		float t = (h - sqrtD) / a;
-		if(t < rayMin || t > rayMax) {
-			t = (h + sqrtD) / a;
-			if(t < rayMin || t > rayMax) {
-				return false;
-			}
+		else if (lengthSq > 1.0f) {
+			result.NormalizeSelf();
 		}
-		outHit.Distance = t;
-		outHit.Position = ray.At(t);
-		const FVector3 outwardNormal = (outHit.Position - Center) / Radius;
-		outHit.FrontFace = outwardNormal.Dot(ray.Direction) < 0.0f;
-		outHit.Normal = outHit.FrontFace ? outwardNormal : -outwardNormal;
-		return true;
+		result.NormalizeSelf();
+		return result;
+	}
+
+	FVector3 RandomOnHemisphere(const FVector3& normal) {
+		// 1. random generate a point until locate in unit sphere
+		FVector3 result = RandomUintVector();
+		// 2. map the point from sphere to hemisphere
+		if (result.Dot(normal) < 0.0f) {
+			return -result;
+		}
+		return result;
+	}
+
+	FVector2 RandomInDisk() {
+		FVector2 result{ Random(-1.0f, 1.0f), Random(-1.0f, 1.0f) };
+		if (result.LengthSquared() > 1.0f) {
+			result.NormalizeSelf();
+		}
+		return result;
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
-#include "Math/MathUtil.h"
+#include <memory>
+#include "Math/Geometry.h"
 class MaterialBase {
 public:
 	virtual ~MaterialBase() = default;

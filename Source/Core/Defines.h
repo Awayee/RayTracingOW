@@ -27,6 +27,8 @@ typedef unsigned long long	uint64;
 #define FLOAT_MAX        3.402823466e+38f
 #define FLOAT_MIN        (-FLOAT_MAX)
 
+#define INVALID_INDEX_U32 UINT32_MAX
+
 #define XX_NODISCARD [[nodiscard]]
 
 #define MoveTemp(x) (std::move(x))

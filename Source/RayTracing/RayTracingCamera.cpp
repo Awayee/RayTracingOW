@@ -1,7 +1,10 @@
 #include "RayTracingCamera.h"
+#include "Math/MathUtil.h"
 #include "Core/Log.h"
 #include <random>
 #include <ppl.h>
+
+#define PARALLEL_RENDERING 1
 
 using namespace Math;
 
@@ -41,6 +44,7 @@ void RayTracingCamera::Render(const RayTracingScene* scene) {
 	const float sampleScale = 1.0f / (float)m_RayPerPixel;
 
 	// parallel rendering
+#if PARALLEL_RENDERING
 	size_t numPixel = (size_t)(m_RenderSize.X * m_RenderSize.Y);
 	Concurrency::parallel_for(0ull, numPixel, [this, sampleScale, scene](size_t pixel) {
 		uint32 renderWidth = m_RenderSize.X;
@@ -62,25 +66,27 @@ void RayTracingCamera::Render(const RayTracingScene* scene) {
 		m_Pixels[j * renderWidth + i] = Color8{ color };
 	});
 
-	//for (uint32 j = 0; j < m_Height; ++j) {
-	//	for (uint32 i = 0; i < m_Width; ++i) {
-	//		// multi sample
-	//		FVector4 color = FVector4::ZERO;
-	//		if(m_RayPerPixel == 1) {
-	//			FVector3 pixelSample = m_PixelStart + (float)i * m_DeltaU + (float)j * m_DeltaV;
-	//			const FRay ray{ m_Eye, pixelSample };
-	//			color = ComputeRayResult(ray, scene, RAY_RECURSIVE_DEPTH);
-	//		}
-	//		else {
-	//			for (uint32 sample = 0; sample < m_RayPerPixel; ++sample) {
-	//				const FRay ray = GetRandomRay(i, j);
-	//				color += ComputeRayResult(ray, scene, RAY_RECURSIVE_DEPTH);
-	//			}
-	//			color *= sampleScale;
-	//		}
-	//		m_Pixels[j * m_Width + i] = Color8{ color };
-	//	}
-	//}
+#else
+	for (uint32 i = 0; i < m_RenderSize.X; ++i) {
+		for (uint32 j = 0; j < m_RenderSize.Y; ++j) {
+			// multi sample
+			FVector4 color = FVector4::ZERO;
+			if(m_RayPerPixel == 1) {
+				FVector3 pixelSample = m_PixelStart + (float)i * m_DeltaU + (float)j * m_DeltaV;
+				const FRay ray{ m_Eye, pixelSample };
+				color = ComputeRayResult(ray, scene, RAY_RECURSIVE_DEPTH);
+			}
+			else {
+				for (uint32 sample = 0; sample < m_RayPerPixel; ++sample) {
+					const FRay ray = GetRandomRay(i, j);
+					color += ComputeRayResult(ray, scene, RAY_RECURSIVE_DEPTH);
+				}
+				color *= sampleScale;
+			}
+			m_Pixels[j * m_RenderSize.X + i] = Color8{ color };
+		}
+	}
+#endif
 }
 
 RenderData RayTracingCamera::GetRenderData() const {
@@ -124,6 +130,7 @@ Math::FRay RayTracingCamera::GetRandomRay(uint32 i, uint32 j) {
 		FVector2 p = RandomInDisk();
 		rayOrigin += p.X * m_DefocusDiskU + p.Y * m_DefocusDiskV;
 	}
+	float RayTime = Random01();
 	return FRay{ rayOrigin, pixelSample - rayOrigin };
 }
 

@@ -1,4 +1,5 @@
 #include "Material.h"
+#include "Math/MathUtil.h"
 
 static float Reflectance(float cosine, float refractionIndex) {
 	// Use Schlick's approximation for reflectance.
