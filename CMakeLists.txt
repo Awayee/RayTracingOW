@@ -37,17 +37,12 @@ endif()
 
 add_definitions(
     -DPROJECT_NAME="${PROJECT_NAME}"
+    -DFORCE_VULKAN=0
     -DSHADER_PATH="${SHADER_PATH}/"
     -DSHADER_PATH_W=L"${SHADER_PATH}/"
     -DASSETS_PATH="${ASSETS_PATH}/"
     -DASSETS_PATH_W=L"${ASSETS_PATH}/"
 )
-# if(NOT TARGET GLFW)
-#     option(GLFW_BUILD_EXAMPLES "" OFF)
-#     option(GLFW_BUILD_TESTS "" OFF)
-#     option(GLFW_BUILD_DOCS "" OFF)
-#     option(GLFW_INSTALL "" OFF)
-#     add_subdirectory(ThirdParty/glfw)
-# endif()
+
 add_subdirectory(Source)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "RayTracingApp")

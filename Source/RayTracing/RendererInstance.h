@@ -1,7 +1,7 @@
 #pragma once
 #include "Renderer/RHICommon.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) && !FORCE_VULKAN
 #define D3D12_RHI
 #else
 #define VULKAN_RHI

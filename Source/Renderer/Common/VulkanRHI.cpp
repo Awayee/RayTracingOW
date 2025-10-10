@@ -53,7 +53,7 @@ inline bool CheckLayerSupported(const std::vector<const char*>&layers) {
 			}
 		}
 		if (!layerFound) {
-			LOG_ERROR("layers is not supported! %s", name);
+			LOG_WARNING("layers is not supported! %s", name);
 			return false;
 		}
 	}
@@ -197,7 +197,7 @@ void TransitionImageLayout(VkCommandBuffer Cmd, VkImage Image, VkImageLayout Old
 VulkanRHI::VulkanRHI(uint32 InWindowWidth, uint32 InWindowHeight):
 WindowWidth(InWindowWidth),
 WindowHeight(InWindowHeight),
-#if defined(_DEBUG) && defined(_WIN32)
+#if defined(_DEBUG)
 bEnableDebug(true),
 #else
 bEnableDebug(false),
