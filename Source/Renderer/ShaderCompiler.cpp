@@ -1,6 +1,9 @@
 #include "Renderer/ShaderCompiler.h"
 #include "Core/Log.h"
 #include <algorithm>
+#ifdef _WIN32
+#include <combaseapi.h>
+#endif
 #include <dxcapi.h>
 #include <filesystem>
 #include <fstream>

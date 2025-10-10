@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.19)
 
-set(TARGET_NAME "Source")
+set(TARGET_NAME "RayTracingApp")
 file(GLOB COMMON_FILES 
+ "${SOURCE_PATH}/*.cpp"
  "${SOURCE_PATH}/Core/*.h"
  "${SOURCE_PATH}/Core/*.cpp"
  "${SOURCE_PATH}/Math/*.h"

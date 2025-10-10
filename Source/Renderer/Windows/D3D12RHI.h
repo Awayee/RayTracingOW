@@ -2,6 +2,7 @@
 #include <functional>
 #include "Core/Defines.h"
 #include "Core/TUniquePtr.h"
+#include "Renderer/Windows/D3DUtil.h"
 #include "Renderer/Windows/D3D12RHI.h"
 #include "Renderer/RHICommon.h"
 

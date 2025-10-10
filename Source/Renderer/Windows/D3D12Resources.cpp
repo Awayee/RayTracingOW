@@ -1,5 +1,5 @@
 #include "Renderer/Windows/D3D12Resources.h"
-#include "Renderer/Common/ShaderCompiler.h"
+#include "Renderer/ShaderCompiler.h"
 #include "Core/Defines.h"
 #include "Core/Log.h"
 #include <array>
