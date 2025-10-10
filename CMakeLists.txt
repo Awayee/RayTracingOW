@@ -14,7 +14,19 @@ set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Assets)
 set(THIRD_PARTY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty)
 set(SHADER_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Shaders)
 
-# set platfor
+# set platform
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(PLATFORM_WINDOWS ON)
+else()
+    set(PLATFORM_WINDOWS OFF)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(PLATFORM_LINUX ON)
+else()
+    set(PLATFORM_LINUX OFF)
+endif()
+
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(PLATFORM_ARCH "x64")
 elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -30,5 +42,12 @@ add_definitions(
     -DASSETS_PATH="${ASSETS_PATH}/"
     -DASSETS_PATH_W=L"${ASSETS_PATH}/"
 )
-add_subdirectory("Source")
+# if(NOT TARGET GLFW)
+#     option(GLFW_BUILD_EXAMPLES "" OFF)
+#     option(GLFW_BUILD_TESTS "" OFF)
+#     option(GLFW_BUILD_DOCS "" OFF)
+#     option(GLFW_INSTALL "" OFF)
+#     add_subdirectory(ThirdParty/glfw)
+# endif()
+add_subdirectory(Source)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "RayTracingApp")

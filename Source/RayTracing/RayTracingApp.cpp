@@ -27,7 +27,7 @@ namespace {
 
 constexpr uint32 WINDOW_WIDTH = 800;
 constexpr uint32 WINDOW_HEIGHT = 450;
-constexpr float RENDER_SCALE = 0.2f;
+constexpr float RENDER_SCALE = 0.5f;
 
 inline void InitializeScene(RayTracingScene* scene) {
 	auto materialGround = MaterialPtr(new LambertMaterial({0.8f, 0.8f, 0.0f, 1.0f}));

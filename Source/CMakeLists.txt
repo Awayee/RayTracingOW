@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
+find_package(OpenMP REQUIRED)
+
 set(TARGET_NAME "RayTracingApp")
 file(GLOB COMMON_FILES 
  "${SOURCE_PATH}/*.cpp"
@@ -15,7 +17,7 @@ file(GLOB COMMON_FILES
  "${SOURCE_PATH}/RayTracing/*.cpp"
  )
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(PLATFORM_WINDOWS)
     file(GLOB PLATFORM_FILES
     "${SOURCE_PATH}/Renderer/Windows/*.h"
     "${SOURCE_PATH}/Renderer/Windows/*.cpp"
@@ -25,7 +27,7 @@ endif()
 source_group(TREE ${SOURCE_PATH} FILES ${COMMON_FILES} ${PLATFORM_FILES})
 add_executable(${TARGET_NAME} ${COMMON_FILES} ${PLATFORM_FILES})
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(PLATFORM_WINDOWS)
     target_link_libraries(${TARGET_NAME} PRIVATE
         d3d12.lib
         dxgi.lib
@@ -37,21 +39,23 @@ endif()
 
 target_include_directories(${TARGET_NAME} PRIVATE ${SOURCE_PATH})
 # dx headers
-target_include_directories(${TARGET_NAME} PRIVATE ${THIRD_PARTY_PATH}/DirectX-Headers/include)
+if(PLATFORM_WINDOWS)
+    target_include_directories(${TARGET_NAME} PRIVATE ${THIRD_PARTY_PATH}/DirectX-Headers/include)
+endif()
 
 # vulkan, glfw, dxc
 target_include_directories(${TARGET_NAME} PRIVATE
     ${THIRD_PARTY_PATH}/Vulkan/include
-    ${THIRD_PARTY_PATH}/glfwWin64/include
+    ${THIRD_PARTY_PATH}/glfw/include
  )
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(PLATFORM_WINDOWS)
     target_include_directories(${TARGET_NAME} PRIVATE
         ${THIRD_PARTY_PATH}/DirectXShaderCompiler/inc
     )
     target_link_libraries(${TARGET_NAME} PRIVATE
         ${THIRD_PARTY_PATH}/Vulkan/lib/Win64/vulkan-1.lib
-        ${THIRD_PARTY_PATH}/glfwWin64/lib-vc2019/glfw3.lib
+        ${THIRD_PARTY_PATH}/glfw/lib-vc2019/glfw3.lib
     )
     # Copy dlls
     set(COPY_DLLS
@@ -65,14 +69,21 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
             $<TARGET_FILE_DIR:${TARGET_NAME}>)
     endforeach()
 
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+elseif(PLATFORM_LINUX)
     target_include_directories(${TARGET_NAME} PRIVATE
-         ${THIRD_PARTY_PATH}/DirectXShaderCompilerLinux/include/dxc
+        ${THIRD_PARTY_PATH}/DirectXShaderCompiler/inc
     )
-     target_link_libraries(${TARGET_NAME} PRIVATE
-        ${THIRD_PARTY_PATH}/Vulkan/lib/Win64/vulkan-1.so
-        ${THIRD_PARTY_PATH}/glfwWin64/lib-vc2019/glfw3.so
-        ${THIRD_PARTY_PATH}/DirectXShaderCompilerLinux/lib/dxcompiler.so
-        ${THIRD_PARTY_PATH}/DirectXShaderCompilerLinux/lib/dxil.so
+    target_link_libraries(${TARGET_NAME} PRIVATE
+        ${THIRD_PARTY_PATH}/Vulkan/lib/Linux/libvulkan.so.1
+        ${THIRD_PARTY_PATH}/glfw/lib-linux/libglfw3.a
+        ${THIRD_PARTY_PATH}/DirectXShaderCompiler/lib/linux/libdxcompiler.so
+        ${THIRD_PARTY_PATH}/DirectXShaderCompiler/lib/linux/libdxil.so
     )
+
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(${TARGET_NAME} PUBLIC OpenMP::OpenMP_CXX)
+        message(STATUS "OpenMP found and linked")
+    else()
+        message(WARNING "OpenMP not found")
+    endif()
 endif()

@@ -9,6 +9,9 @@ inline void ParallelFor(uint64 Num, uint64 NumLoops, std::function<void(uint64)>
 
 #else
 inline void ParallelFor(uint64 Num, uint64 NumLoops, std::function<void(uint64)>&& Func){
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for(uint64 i=0; i<NumLoops; ++i){
         Func(i);
     }

@@ -113,8 +113,8 @@ inline VkExtent2D GetSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilitie
 		return capabilities.currentExtent;
 	}
 	return {
-		Math::Clamp<uint32>(WindowWidth, capabilities.minImageExtent.width, capabilities.maxImageExtent.height),
-		Math::Clamp<uint32>(WindowHeight, capabilities.maxImageExtent.width, capabilities.maxImageExtent.height)
+		Math::Clamp<uint32>(WindowWidth, capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
+		Math::Clamp<uint32>(WindowHeight, capabilities.minImageExtent.height, capabilities.maxImageExtent.height)
 	};
 }
 
@@ -195,7 +195,14 @@ void TransitionImageLayout(VkCommandBuffer Cmd, VkImage Image, VkImageLayout Old
 }
 
 VulkanRHI::VulkanRHI(uint32 InWindowWidth, uint32 InWindowHeight):
-WindowWidth(InWindowWidth), WindowHeight(InWindowHeight), bEnableDebug(true), FrameIndex(0) {
+WindowWidth(InWindowWidth),
+WindowHeight(InWindowHeight),
+#if defined(_DEBUG) && defined(_WIN32)
+bEnableDebug(true),
+#else
+bEnableDebug(false),
+#endif
+FrameIndex(0) {
 	CreateGLFWWindow();
 	CreateInstance();
 	PickGPU();
@@ -226,6 +233,9 @@ VulkanRHI::~VulkanRHI() {
 	vkDestroyRenderPass(Device, DefaultRenderPass, nullptr);
 	vkDestroySurfaceKHR(Instance, Surface, nullptr);
 	vkDestroyDevice(Device, nullptr);
+
+	glfwDestroyWindow(Window);
+	glfwTerminate();
 }
 
 RHITextureHandle VulkanRHI::CreateTexture(uint32 width, uint32 height, uint16 layer, uint16 mip, ERHIFormat format) {
@@ -266,7 +276,6 @@ bool VulkanRHI::DrawTexture(RHITextureHandle TextureHandle) {
 	if (glfwWindowShouldClose(Window)) {
 		return false;
 	}
-	glfwPollEvents();
 
 	VulkanTexture* Texture = (VulkanTexture*)TextureHandle;
 	FrameSyncResource& FrameResource = FrameResources[FrameIndex];
@@ -380,6 +389,8 @@ bool VulkanRHI::DrawTexture(RHITextureHandle TextureHandle) {
 	PresentInfo.pImageIndices = &ImageIndex;
 	PresentInfo.pResults = nullptr;
 	vkQueuePresentKHR(PresentQueue->Queue, &PresentInfo);
+
+	glfwPollEvents();
 	return true;
 }
 
@@ -388,13 +399,16 @@ void VulkanRHI::CreateGLFWWindow() {
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+	glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 	Window = glfwCreateWindow((int)WindowWidth, (int)WindowHeight, PROJECT_NAME, nullptr, nullptr);
+
 	// Update window size
 	int NewWidth, NewHeight;
 	glfwGetWindowSize(Window, &NewWidth, &NewHeight);
 	WindowWidth = (uint32)NewWidth;
 	WindowHeight = (uint32)NewHeight;
 
+	glfwMakeContextCurrent(Window);
 	glfwSetWindowUserPointer(Window, (void*)this);
 	glfwSetWindowSizeCallback(Window, OnWindowResize);
 }
@@ -495,6 +509,7 @@ void VulkanRHI::PickGPU() {
 		info.Order = i;
 		info.PhysicalDevice = physicalDevices[i];
 		vkGetPhysicalDeviceProperties(info.PhysicalDevice, &info.Properties);
+		LOG_INFO("----Available GPU: %s", info.Properties.deviceName);
 	}
 
 	std::sort(deviceInfos.begin(), deviceInfos.end(), [](const PhysicalDeviceInfo& l, const PhysicalDeviceInfo& r)->bool {
@@ -509,6 +524,7 @@ void VulkanRHI::PickGPU() {
 	for (const PhysicalDeviceInfo& info : deviceInfos) {
 		if (info.Properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU) {
 			PhysicalDevice = info.PhysicalDevice;
+			LOG_INFO("Picked GPU: %s", info.Properties.deviceName);
 			return;
 		}
 	}
@@ -578,8 +594,6 @@ void VulkanRHI::CreateDevice() {
 	VkPhysicalDeviceVulkan12Features features12{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
 	features12.shaderFloat16 = VK_TRUE;
 	features12.shaderInt8 = VK_TRUE;
-	VkPhysicalDeviceVulkan13Features features13{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
-	features13.dynamicRendering = VK_TRUE;
 	features2.pNext = &features11;
 	features11.pNext = &features12;
 	VkPhysicalDeviceFeatures& features = features2.features;
