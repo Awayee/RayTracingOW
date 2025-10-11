@@ -14,7 +14,7 @@ bool RayTracingScene::RayHit(const Math::FRay& ray, float rayMin, float rayMax, 
 	for(const auto& obj: m_Objects) {
 		if(obj.Sphere.RayHit(ray, rayMin, closestDistance, outHit.Geometry)) {
 			closestDistance = outHit.Geometry.Distance;
-			outHit.Material = obj.Material.get();
+			outHit.Material = obj.Material.Get();
 			hitAnything = true;
 		}
 	}

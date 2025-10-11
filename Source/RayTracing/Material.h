@@ -1,5 +1,5 @@
 #pragma once
-#include <memory>
+#include "Core/TUniquePtr.h"
 #include "Math/Geometry.h"
 class MaterialBase {
 public:
@@ -7,7 +7,7 @@ public:
 	virtual bool Scatter(const Math::FRay& inRay, const Math::FRayHit& rayHit, Math::FVector4& outColor, Math::FRay& outRay) const = 0;
 };
 
-typedef std::unique_ptr<MaterialBase> MaterialPtr;
+typedef TUniquePtr<MaterialBase> MaterialPtr;
 
 class LambertMaterial: public MaterialBase {
 public:

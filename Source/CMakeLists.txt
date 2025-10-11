@@ -9,18 +9,18 @@ file(GLOB COMMON_FILES
  "${SOURCE_PATH}/Core/*.cpp"
  "${SOURCE_PATH}/Math/*.h"
  "${SOURCE_PATH}/Math/*.cpp"
- "${SOURCE_PATH}/Renderer/*.h"
- "${SOURCE_PATH}/Renderer/*.cpp"
- "${SOURCE_PATH}/Renderer/Common/*.h"
- "${SOURCE_PATH}/Renderer/Common/*.cpp"
+ "${SOURCE_PATH}/RHI/*.h"
+ "${SOURCE_PATH}/RHI/*.cpp"
+ "${SOURCE_PATH}/RHI/Common/*.h"
+ "${SOURCE_PATH}/RHI/Common/*.cpp"
  "${SOURCE_PATH}/RayTracing/*.h"
  "${SOURCE_PATH}/RayTracing/*.cpp"
  )
 
 if(PLATFORM_WINDOWS)
     file(GLOB PLATFORM_FILES
-    "${SOURCE_PATH}/Renderer/Windows/*.h"
-    "${SOURCE_PATH}/Renderer/Windows/*.cpp"
+    "${SOURCE_PATH}/RHI/Windows/*.h"
+    "${SOURCE_PATH}/RHI/Windows/*.cpp"
     )
 endif()
 

@@ -1,20 +1,26 @@
 #pragma once
 #include "Vector.h"
-#include "Ray.h"
 namespace Math {
-	struct Color8 {
-	public:
-		union {
-			struct { uint8 R, G, B, A; };
-			uint8 Components[4];
-			uint32 Hex;
-		};
-		Color8() :Hex(0) {}
-		Color8(uint8 r, uint8 g, uint8 b, uint8 a) :R(r), G(g), B(b), A(a) {}
-		Color8(uint32 hex) : Hex(hex) {}
-		Color8(float r, float g, float b, float a) : R(PackUNorm(r)), G(PackUNorm(g)), B(PackUNorm(b)), A(PackUNorm(a)) {}
-		Color8(const FVector4& inVec) :Color8(inVec.X, inVec.Y, inVec.Z, inVec.W) {}
-		Color8(const FVector3& inVec) :Color8(inVec.X, inVec.Y, inVec.Z, 1.0f) {}
+	struct FRay {
+		FVector3 Origin;
+		FVector3 Direction;
+		FRay();
+		FRay(const FVector3& InOrigin, const FVector3& InDirection);
+		FVector3 At(float t) const;
+	};
+
+	struct FRayWithTime: FRay {
+		float Time;
+		FRayWithTime();
+		FRayWithTime(const FVector3& InOrigin, const FVector3& InDirection, float InTime);
+	};
+
+	struct FRayHit {
+		FVector3 Position;
+		FVector3 Normal;
+		float Distance;
+		bool FrontFace;
+		FRayHit();
 	};
 
 	struct FSphere {

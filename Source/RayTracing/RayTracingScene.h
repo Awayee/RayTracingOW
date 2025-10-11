@@ -4,7 +4,7 @@
 
 struct RayHitSurface{
 	Math::FRayHit Geometry;
-	MaterialBase* Material{ nullptr };
+	const MaterialBase* Material{ nullptr };
 };
 
 class RayTracingScene {

@@ -2,9 +2,9 @@
 #include <functional>
 #include "Core/Defines.h"
 #include "Core/TUniquePtr.h"
-#include "Renderer/Windows/D3DUtil.h"
-#include "Renderer/Windows/D3D12RHI.h"
-#include "Renderer/RHICommon.h"
+#include "RHI/Windows/D3DUtil.h"
+#include "RHI/Windows/D3D12RHI.h"
+#include "RHI/RHICommon.h"
 
 class D3D12Window;
 class D3D12PSO;

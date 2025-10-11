@@ -1,5 +1,5 @@
 #pragma once
-#include "Renderer/Windows/D3DUtil.h"
+#include "RHI/Windows/D3DUtil.h"
 #include "Core/Defines.h"
 
 class D3D12Buffer {

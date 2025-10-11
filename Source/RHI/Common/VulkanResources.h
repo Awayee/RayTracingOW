@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Core/Defines.h"
-#include "Renderer/Common/VulkanUtil.h"
+#include "RHI/Common/VulkanUtil.h"
 
 class VulkanBuffer {
 public:

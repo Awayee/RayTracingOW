@@ -1,21 +1,17 @@
 #pragma once
-#include "RayTracingScene.h"
-
-struct RenderData {
-	uint32 Width;
-	uint32 Height;
-	const Math::Color8* Data;
-};
+#include "Math/Vector.h"
+#include "Math/Geometry.h"
 
 class RayTracingCamera {
 public:
-	RayTracingCamera(Math::USize size);
+	RayTracingCamera(Math::USize InRenderSize);
 	~RayTracingCamera();
 	void SetView(const Math::FVector3& eye, const Math::FVector3& at, const Math::FVector3& up);
 	void SetFov(float fov);
 	void SetFocus(float focusDistance, float defocusAngle);
-	void Render(const RayTracingScene* scene);
-	RenderData GetRenderData() const;
+	Math::USize GetRenderSize() const;
+	Math::FRay GetRandomRay(uint32 i, uint32 j) const;
+	Math::FRayWithTime GetRandomRayWithTime(uint32 i, uint32 j) const;
 private:
 	// view
 	Math::FVector3 m_Eye{0.0f, 0.0f, 0.0f};
@@ -28,9 +24,7 @@ private:
 	float m_FocusDistance {3.4f};
 
 	// render
-	uint32 m_RayPerPixel;
-	Math::USize m_RenderSize;
-	std::vector<Math::Color8> m_Pixels;
+	Math::USize RenderSize;
 
 	// ray data
 	Math::FVector3 m_PixelStart;
@@ -41,6 +35,4 @@ private:
 
 	void SetupRayData();
 	void ComputeDirections(Math::FVector3& forward, Math::FVector3& right, Math::FVector3& up) const;
-	Math::FRay GetRandomRay(uint32 i, uint32 j);
-	Math::FVector4 ComputeRayResult(const Math::FRay& ray, const RayTracingScene* scene, uint32 recursiveDepth);
 };

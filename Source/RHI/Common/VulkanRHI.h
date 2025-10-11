@@ -1,6 +1,6 @@
 #pragma once
 #include "Core/Defines.h"
-#include "Renderer/RHICommon.h"
+#include "RHI/RHICommon.h"
 #include "Core/TUniquePtr.h"
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>

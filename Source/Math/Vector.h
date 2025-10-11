@@ -6,8 +6,8 @@ namespace Math {
 
     // Vectors
     template <typename T> struct Vector2 {
-        T X{ 0.f };
-    	T Y{ 0.f };
+        T X{ (T)0 };
+    	T Y{ (T)0 };
         static const Vector2<T> ZERO;
         Vector2() = default;
         Vector2(T _x, T _y) : X(_x), Y(_y) {}

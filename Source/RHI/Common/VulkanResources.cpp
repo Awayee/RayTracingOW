@@ -1,5 +1,5 @@
-#include "Renderer/Common/VulkanResources.h"
-#include "Renderer/ShaderCompiler.h"
+#include "RHI/Common/VulkanResources.h"
+#include "RHI/ShaderCompiler.h"
 
 uint32 FindMemoryType(VkPhysicalDevice PhysicalDevice, uint32_t typrFilter, VkMemoryPropertyFlags properties) {
 	VkPhysicalDeviceMemoryProperties memProperties;

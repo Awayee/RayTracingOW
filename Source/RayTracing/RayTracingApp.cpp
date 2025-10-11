@@ -1,11 +1,13 @@
 #include "RayTracing/RayTracingApp.h"
 #include "RayTracing/RayTracingScene.h"
 #include "RayTracing/RayTracingCamera.h"
+#include "RayTracing/RayTracingRenderer.h"
 #include "Core/Log.h"
 #include "Core/Timer.h"
 #include "Math/Vector.h"
 #include "Math/MathUtil.h"
 #include "Math/Geometry.h"
+#include "RHI/RHIInstance.h"
 
 namespace {
 	// print the cost
@@ -27,7 +29,7 @@ namespace {
 
 constexpr uint32 WINDOW_WIDTH = 800;
 constexpr uint32 WINDOW_HEIGHT = 450;
-constexpr float RENDER_SCALE = 0.5f;
+constexpr float RENDER_SCALE = 0.2f;
 
 inline void InitializeScene(RayTracingScene* scene) {
 	auto materialGround = MaterialPtr(new LambertMaterial({0.8f, 0.8f, 0.0f, 1.0f}));
@@ -87,7 +89,7 @@ inline void InitializeScene2(RayTracingScene* scene) {
 
 RayTracingApp::RayTracingApp() {
 	// ========== step1. Initialize context ==========
-	InitializeRenderer( WINDOW_WIDTH, WINDOW_HEIGHT);
+	InitializeRHI( WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	// ========== step2. Scene rendering ==========
 	// Initialize camera
@@ -99,24 +101,26 @@ RayTracingApp::RayTracingApp() {
 	// Create ray tracing scene
 	Scene.Reset(new RayTracingScene());
 	InitializeScene2(Scene.Get());
+
+	RayTracingRenderer Renderer{ Camera.Get(), Scene.Get() };
 	// Render the scene
 	{
 		ProfilePrintScope s{ "Scene Rendering" };
-		Camera->Render(Scene.Get());
+		Renderer.Render();
 	}
 
+	RenderResult Result = Renderer.GetRenderResult();
 	// ========== step3. Display the render texture ==========
-	RenderData renderData = Camera->GetRenderData();
 	// Create texture and upload data
-	Texture = GetRenderer()->CreateTexture(renderData.Width, renderData.Height, 1, 1, ERHIFormat::R8G8B8A8_UNorm);
-	GetRenderer()->UpdateTextureData(Texture, renderData.Data, (size_t)renderData.Width * (size_t)renderData.Height * sizeof(Math::Color8));
+	Texture = GetRHI()->CreateTexture(Result.Width, Result.Height, 1, 1, ERHIFormat::R8G8B8A8_UNorm);
+	GetRHI()->UpdateTextureData(Texture, Result.Data, (size_t)Result.Width * (size_t)Result.Height * sizeof(Math::Color8));
 }
 
 RayTracingApp::~RayTracingApp() {
-	GetRenderer()->DestroyTexture(Texture);
-	ReleaseRenderer();
+	GetRHI()->DestroyTexture(Texture);
+	ReleaseRHI();
 }
 
 void RayTracingApp::Run() {
-	while(GetRenderer()->DrawTexture(Texture)){}
+	while(GetRHI()->DrawTexture(Texture)){}
 }

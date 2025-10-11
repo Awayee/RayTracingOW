@@ -4,9 +4,6 @@
 #define D3DX12_NO_CHECK_FEATURE_SUPPORT_CLASS
 #include <d3dx12.h>
 #include <dxgi1_4.h>
-#include <d3dcompiler.h>
-#include <vector>
-#include <memory>
 #include <iostream>
 #if defined(DEBUG) || defined(_DEBUG)
 #define _CRTDBG_MAP_ALLOC
