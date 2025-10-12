@@ -1,20 +1,31 @@
 #include "RayTracingScene.h"
 
-void RayTracingScene::AddSphere(const Math::FSphere& sphere) {
-	AddSphere(sphere, MakeDefaultMaterial());
+void RayTracingScene::AddSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial) {
+	Objects.emplace_back(new RTSphere(InSphere, MoveTemp(InMaterial)));
 }
 
-void RayTracingScene::AddSphere(const Math::FSphere& sphere, MaterialPtr&& material) {
-	m_Objects.push_back({ sphere, MoveTemp(material)});
+void RayTracingScene::AddMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial, const Math::FVector3& MoveTarget) {
+	Objects.emplace_back(new RTMovableSphere(InSphere, MoveTemp(InMaterial), MoveTarget));
 }
 
-bool RayTracingScene::RayHit(const Math::FRay& ray, float rayMin, float rayMax, RayHitSurface& outHit) const {
+bool RayTracingScene::TestRay(const Math::FRay& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const {
 	bool hitAnything = false;
-	float closestDistance = rayMax;
-	for(const auto& obj: m_Objects) {
-		if(obj.Sphere.RayHit(ray, rayMin, closestDistance, outHit.Geometry)) {
-			closestDistance = outHit.Geometry.Distance;
-			outHit.Material = obj.Material.Get();
+	float closestDistance = DistanceMax;
+	for(const TUniquePtr<RayTracingObjectBase>& obj: Objects) {
+		if(obj->TestRay(InRay, DistanceMin, closestDistance, OutHit)) {
+			closestDistance = OutHit.Geometry.Distance;
+			hitAnything = true;
+		}
+	}
+	return hitAnything;
+}
+
+bool RayTracingScene::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const {
+	bool hitAnything = false;
+	float closestDistance = DistanceMax;
+	for (const TUniquePtr<RayTracingObjectBase>& obj : Objects) {
+		if (obj->TestRayWithTime(InRay, DistanceMin, closestDistance, OutHit)) {
+			closestDistance = OutHit.Geometry.Distance;
 			hitAnything = true;
 		}
 	}

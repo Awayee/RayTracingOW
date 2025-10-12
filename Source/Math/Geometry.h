@@ -27,7 +27,7 @@ namespace Math {
 		FVector3 Center;
 		float Radius;
 		FSphere(const FVector3& center, float radius) : Center(center), Radius(Max(0.0f, radius)) {}
-		float RayHit(const FRay& ray) const;
-		bool RayHit(const FRay& ray, float rayMin, float rayMax, FRayHit& outHit) const;
+		float TestRay(const FRay& InRay) const;
+		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const;
 	};
 }

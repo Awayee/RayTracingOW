@@ -8,6 +8,14 @@ static float Reflectance(float cosine, float refractionIndex) {
 	return r0 + (1 - r0) * Math::Pow((1 - cosine), 5.0f);
 }
 
+bool MaterialBase::ScatterWithTime(const Math::FRayWithTime& InRay, const Math::FRayHit& RayHit, Math::FVector4& OutColor, Math::FRayWithTime& OutRay) const {
+	if(Scatter((const Math::FRay&)InRay, RayHit, OutColor, (Math::FRay&)OutRay)) {
+		OutRay.Time = InRay.Time;
+		return true;
+	}
+	return false;	
+}
+
 bool LambertMaterial::Scatter(const Math::FRay& inRay, const Math::FRayHit& rayHit, Math::FVector4& outColor, Math::FRay& outRay) const {
 	Math::FVector3 scatterDirection = rayHit.Normal + Math::RandomUintVector();
 	if (scatterDirection.IsNearlyZero())

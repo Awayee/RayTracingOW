@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 typedef char				int8;
 typedef unsigned char		uint8;

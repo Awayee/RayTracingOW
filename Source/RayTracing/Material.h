@@ -5,6 +5,7 @@ class MaterialBase {
 public:
 	virtual ~MaterialBase() = default;
 	virtual bool Scatter(const Math::FRay& inRay, const Math::FRayHit& rayHit, Math::FVector4& outColor, Math::FRay& outRay) const = 0;
+	virtual bool ScatterWithTime(const Math::FRayWithTime& InRay, const Math::FRayHit& RayHit, Math::FVector4& OutColor, Math::FRayWithTime& OutRay) const;
 };
 
 typedef TUniquePtr<MaterialBase> MaterialPtr;

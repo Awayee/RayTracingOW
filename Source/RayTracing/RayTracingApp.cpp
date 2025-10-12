@@ -9,6 +9,12 @@
 #include "Math/Geometry.h"
 #include "RHI/RHIInstance.h"
 
+static constexpr uint32 WINDOW_WIDTH = 800;
+static constexpr uint32 WINDOW_HEIGHT = 450;
+static constexpr float RENDER_SCALE = 1.0f;
+static constexpr uint32 NUM_RAYS_PER_PIXEL = 32;
+static constexpr uint32 RAY_RECURSIVE_DEPTH = 16;
+
 namespace {
 	// print the cost
 	class ProfilePrintScope {
@@ -26,10 +32,6 @@ namespace {
 		TimePoint m_StartTime;
 	};
 }
-
-constexpr uint32 WINDOW_WIDTH = 800;
-constexpr uint32 WINDOW_HEIGHT = 450;
-constexpr float RENDER_SCALE = 0.2f;
 
 inline void InitializeScene(RayTracingScene* scene) {
 	auto materialGround = MaterialPtr(new LambertMaterial({0.8f, 0.8f, 0.0f, 1.0f}));
@@ -64,7 +66,8 @@ inline void InitializeScene2(RayTracingScene* scene) {
 					// diffuse
 					auto albedo = Math::Random01Vector() * Math::Random01Vector();
 					auto mat = MaterialPtr(new LambertMaterial(albedo));
-					scene->AddSphere({ center, 0.2f }, MoveTemp(mat));
+					auto MoveTarget = center + Math::FVector3{0, Math::Random(0, 0.5f), 0};
+					scene->AddMovableSphere({ center, 0.2f }, MoveTemp(mat), MoveTarget);
 				}
 				else if (chooseMaterial < 0.95f) {
 					// metal
@@ -102,7 +105,7 @@ RayTracingApp::RayTracingApp() {
 	Scene.Reset(new RayTracingScene());
 	InitializeScene2(Scene.Get());
 
-	RayTracingRenderer Renderer{ Camera.Get(), Scene.Get() };
+	RayTracingRenderer Renderer{ Camera.Get(), Scene.Get(), NUM_RAYS_PER_PIXEL, RAY_RECURSIVE_DEPTH};
 	// Render the scene
 	{
 		ProfilePrintScope s{ "Scene Rendering" };

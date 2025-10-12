@@ -16,17 +16,21 @@ struct RenderResult {
 
 class RayTracingRenderer {
 public:
-	RayTracingRenderer(RayTracingCamera* InCamera, RayTracingScene* InScene);
+	RayTracingRenderer(RayTracingCamera* InCamera, RayTracingScene* InScene, uint32 InNumRaysPerPixel, uint32 InRecursiveDepth);
 	void Render();
 	RenderResult GetRenderResult() const;
 private:
 	RayTracingCamera* Camera;
 	RayTracingScene* Scene;
 
-	// render
-	uint32 RayPerPixel;
+	// render Result
 	std::vector<Math::Color8> Pixels;
 
+	// Performance params
+	const uint32 NumRaysPerPixel;
+	const uint32 RecursiveDepth;
+
 	Math::FVector4 ComputeRayResult(const Math::FRay& Ray, uint32 RecursiveDepth);
+	Math::FVector4 ComputeRayResultWithTime(const Math::FRayWithTime& Ray, uint32 RecursiveDepth);
 	Math::FVector4 RayFallback(const Math::FRay& Ray);
 };

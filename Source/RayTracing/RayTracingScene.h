@@ -1,24 +1,18 @@
 #pragma once
 #include <vector>
-#include "Material.h"
-
-struct RayHitSurface{
-	Math::FRayHit Geometry;
-	const MaterialBase* Material{ nullptr };
-};
+#include "RayTracing/RayTracingObject.h"
+#include "Core/TUniquePtr.h"
 
 class RayTracingScene {
 public:
 	RayTracingScene() = default;
 	~RayTracingScene() = default;
-	void AddSphere(const Math::FSphere& sphere);
-	void AddSphere(const Math::FSphere& sphere, MaterialPtr&& material);
-	bool RayHit(const Math::FRay& ray, float rayMin, float rayMax, RayHitSurface& outHit) const;
+
+	void AddSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial);
+	void AddMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial, const Math::FVector3& MoveTarget);
+	bool TestRay(const Math::FRay& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const;
+	bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const;
 private:
-	struct SceneObject {
-		Math::FSphere Sphere;
-		MaterialPtr Material;
-	};
-	std::vector<SceneObject> m_Objects;
+	std::vector<TUniquePtr<RayTracingObjectBase>> Objects;
 	MaterialPtr MakeDefaultMaterial();
 };

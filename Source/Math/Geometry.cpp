@@ -16,49 +16,49 @@ namespace Math {
 	}
 
 	FRayHit::FRayHit() : Distance(0.0f), FrontFace(true) {}
-	float FSphere::RayHit(const FRay& ray) const {
-		//const FVector3 oc = Center - ray.Origin;
-		//const float a = ray.Direction.Dot(ray.Direction);
-		//const float b = -2.0f * ray.Direction.Dot(oc);
+	float FSphere::TestRay(const FRay& InRay) const {
+		//const FVector3 oc = Center - InRay.Origin;
+		//const float a = InRay.Direction.Dot(InRay.Direction);
+		//const float b = -2.0f * InRay.Direction.Dot(oc);
 		//const float c = oc.Dot(oc) - Radius * Radius;
 		//const float discriminant = b * b - 4 * a * c;
 		//if(discriminant < 0.0f) {
 		//	return -1.0f;
 		//}
 		//return (-b - Sqrt(discriminant)) / (a * 2.0f);
-		const FVector3 oc = Center - ray.Origin;
-		const float a = ray.Direction.LengthSquared();
-		const float h = ray.Direction.Dot(oc);
-		const float c = oc.LengthSquared() - Radius * Radius;
-		const float discriminant = h * h - a * c;
-		if (discriminant < 0.0f) {
+		const FVector3 OC = Center - InRay.Origin;
+		const float a = InRay.Direction.LengthSquared();
+		const float h = InRay.Direction.Dot(OC);
+		const float c = OC.LengthSquared() - Radius * Radius;
+		const float Discriminant = h * h - a * c;
+		if (Discriminant < 0.0f) {
 			return -1.0f;
 		}
-		return h - Sqrt(discriminant) / a;
+		return h - Sqrt(Discriminant) / a;
 	}
 
-	bool FSphere::RayHit(const FRay& ray, float rayMin, float rayMax, FRayHit& outHit) const {
-		const FVector3 oc = Center - ray.Origin;
-		const float a = ray.Direction.LengthSquared();
-		const float h = ray.Direction.Dot(oc);
-		const float c = oc.LengthSquared() - Radius * Radius;
-		const float discriminant = h * h - a * c;
-		if (discriminant < 0.0f) {
+	bool FSphere::TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const {
+		const FVector3 OC = Center - InRay.Origin;
+		const float a = InRay.Direction.LengthSquared();
+		const float h = InRay.Direction.Dot(OC);
+		const float c = OC.LengthSquared() - Radius * Radius;
+		const float Discriminant = h * h - a * c;
+		if (Discriminant < 0.0f) {
 			return false;
 		}
-		const float sqrtD = std::sqrt(discriminant);
-		float t = (h - sqrtD) / a;
-		if (t < rayMin || t > rayMax) {
-			t = (h + sqrtD) / a;
-			if (t < rayMin || t > rayMax) {
+		const float SqrtD = std::sqrt(Discriminant);
+		float t = (h - SqrtD) / a;
+		if (t < DistanceMin || t > DistanceMax) {
+			t = (h + SqrtD) / a;
+			if (t < DistanceMin || t > DistanceMax) {
 				return false;
 			}
 		}
-		outHit.Distance = t;
-		outHit.Position = ray.At(t);
-		const FVector3 outwardNormal = (outHit.Position - Center) / Radius;
-		outHit.FrontFace = outwardNormal.Dot(ray.Direction) < 0.0f;
-		outHit.Normal = outHit.FrontFace ? outwardNormal : -outwardNormal;
+		OutHit.Distance = t;
+		OutHit.Position = InRay.At(t);
+		const FVector3 OutWardNormal = (OutHit.Position - Center) / Radius;
+		OutHit.FrontFace = OutWardNormal.Dot(InRay.Direction) < 0.0f;
+		OutHit.Normal = OutHit.FrontFace ? OutWardNormal : -OutWardNormal;
 		return true;
 	}
 }
