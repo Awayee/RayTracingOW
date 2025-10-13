@@ -9,6 +9,7 @@ bool RayTracingObjectBase::TestRayWithTime(const Math::FRayWithTime& InRay, floa
 
 RTSphere::RTSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial):
 GeometrySphere(InSphere),SurfaceMaterial(MoveTemp(InMaterial)) {
+	AABB = Math::FAABB3::CenterExtent(InSphere.Center, Math::FVector3{InSphere.Radius});
 }
 
 bool RTSphere::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
@@ -19,11 +20,18 @@ bool RTSphere::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceM
 	return false;
 }
 
+Math::FAABB3 RTSphere::GetAABB() const {
+	return AABB;
+}
+
 RTMovableSphere::RTMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMatrial, const Math::FVector3& InMoveTarget):
 RTSphere(InSphere, MoveTemp(InMatrial)), MoveTarget(InMoveTarget){
 	const Math::FVector3 MoveVector = MoveTarget - GeometrySphere.Center;
 	MoveDistance = MoveVector.Length();
 	MoveDir = MoveVector / MoveDistance;
+
+	Math::FAABB3 TargetAABB = Math::FAABB3::CenterExtent(MoveTarget, Math::FVector3{InSphere.Radius});
+	AABB.Union(TargetAABB);
 }
 
 bool RTMovableSphere::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {

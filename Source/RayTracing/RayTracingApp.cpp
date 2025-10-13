@@ -11,9 +11,15 @@
 
 static constexpr uint32 WINDOW_WIDTH = 800;
 static constexpr uint32 WINDOW_HEIGHT = 450;
-static constexpr float RENDER_SCALE = 1.0f;
 static constexpr uint32 NUM_RAYS_PER_PIXEL = 32;
 static constexpr uint32 RAY_RECURSIVE_DEPTH = 16;
+static constexpr float RENDER_SCALE =
+#ifdef _DEBUG
+0.5f
+#else
+1.0f
+#endif
+;
 
 namespace {
 	// print the cost
@@ -104,6 +110,7 @@ RayTracingApp::RayTracingApp() {
 	// Create ray tracing scene
 	Scene.Reset(new RayTracingScene());
 	InitializeScene2(Scene.Get());
+	Scene->BuildHierarchy();
 
 	RayTracingRenderer Renderer{ Camera.Get(), Scene.Get(), NUM_RAYS_PER_PIXEL, RAY_RECURSIVE_DEPTH};
 	// Render the scene

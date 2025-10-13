@@ -30,4 +30,17 @@ namespace Math {
 		float TestRay(const FRay& InRay) const;
 		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const;
 	};
+
+	struct FAABB3
+	{
+		FVector3 Min;
+		FVector3 Max;
+		static FAABB3 CenterExtent(const Math::FVector3& Center, const FVector3& Extent);
+		FVector3 Center() const;
+		FVector3 Extent() const;
+		bool IsValid() const;
+		int GetMaxAxis() const;
+		void Union(const FAABB3& Other);
+		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax) const;
+	};
 }

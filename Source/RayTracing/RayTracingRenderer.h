@@ -23,12 +23,12 @@ private:
 	RayTracingCamera* Camera;
 	RayTracingScene* Scene;
 
-	// render Result
-	std::vector<Math::Color8> Pixels;
-
 	// Performance params
 	const uint32 NumRaysPerPixel;
 	const uint32 RecursiveDepth;
+
+	// render Result
+	std::vector<Math::Color8> Pixels;
 
 	Math::FVector4 ComputeRayResult(const Math::FRay& Ray, uint32 RecursiveDepth);
 	Math::FVector4 ComputeRayResultWithTime(const Math::FRayWithTime& Ray, uint32 RecursiveDepth);
