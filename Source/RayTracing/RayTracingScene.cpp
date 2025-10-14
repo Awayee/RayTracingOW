@@ -39,6 +39,10 @@ void RayTracingScene::AddMovableSphere(const Math::FSphere& InSphere, MaterialPt
 	Objects.emplace_back(new RTMovableSphere(InSphere, MoveTemp(InMaterial), MoveTarget));
 }
 
+void RayTracingScene::AddObject(TUniquePtr<RayTracingObjectBase>&& InObject) {
+	Objects.push_back(MoveTemp(InObject));
+}
+
 void RayTracingScene::BuildHierarchy() {
 	RecursivelyBuildNode(0, (uint32)Objects.size(), 0);
 }
@@ -66,6 +70,15 @@ bool RayTracingScene::TestRayWithTime(const Math::FRayWithTime& InRay, float Dis
 	//}
 	//return hitAnything;
 	return RecursivelyTestRayWithTime(0, InRay, DistanceMin, DistanceMax, OutHit);
+}
+
+Math::FVector4 RayTracingScene::RayFallback(const Math::FRay& InRay) {
+	// Return sky color
+	const float Alpha = InRay.Direction.Normalize().Y * 0.5f + 0.5f;
+	static const Math::FVector3 Color0{ 1.0f, 1.0f, 1.0f };
+	static const Math::FVector3 Color1{ 0.5f, 0.7f, 1.0f };
+	const Math::FVector3 Color = Alpha * Color1 + (1.0f - Alpha) * Color0;
+	return Math::FVector4{ Color, 1.0f };
 }
 
 RayTracingScene::BVHNode::BVHNode() :
@@ -110,7 +123,9 @@ uint32 RayTracingScene::RecursivelyBuildNode(uint32 ObjectStart, uint32 ObjectEn
 }
 
 bool RayTracingScene::RecursivelyTestRayWithTime(uint32 NodeIdx, const Math::FRayWithTime& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
-	CHECK(NodeIdx < Nodes.size());
+	if(!(NodeIdx < Nodes.size())) {
+		return false;
+	}
 	const BVHNode& Node = Nodes[NodeIdx];
 	if(!Node.AABB.TestRay(Ray, DistanceMin, DistanceMax)) {
 		return false;

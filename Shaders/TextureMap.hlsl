@@ -31,7 +31,7 @@ VSOutput MainVS(VSInput vIn, uint vID: SV_VertexID) {
 
 PSOutput MainPS(VSOutput pIn) {
     float3 color = g_Texture.Sample(g_Sampler, pIn.UV.xy).rgb;
-    color = pow(color, 1.0 / 2.2);// gama correction
+    color = pow(color, 1.0 / 2.0);// gama correction
     PSOutput pOut = (PSOutput)0;
     pOut.outColor = float4(color, 1.0);
     return pOut;

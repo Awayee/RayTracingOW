@@ -30,7 +30,6 @@ private:
 	// render Result
 	std::vector<Math::Color8> Pixels;
 
-	Math::FVector4 ComputeRayResult(const Math::FRay& Ray, uint32 RecursiveDepth);
-	Math::FVector4 ComputeRayResultWithTime(const Math::FRayWithTime& Ray, uint32 RecursiveDepth);
-	Math::FVector4 RayFallback(const Math::FRay& Ray);
+	Math::FVector4 ComputeRayResult(const Math::FRay& Ray, uint32 Depth);
+	Math::FVector4 ComputeRayResultWithTime(const Math::FRayWithTime& Ray, uint32 Depth);
 };

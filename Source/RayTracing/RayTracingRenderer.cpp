@@ -40,29 +40,29 @@ RenderResult RayTracingRenderer::GetRenderResult() const {
 	return RenderResult{ RenderSize.X, RenderSize.Y, Pixels.data()};
 }
 
-Math::FVector4 RayTracingRenderer::ComputeRayResult(const Math::FRay& Ray, uint32 RecursiveDepth) {
-	if (0u == RecursiveDepth) {
+Math::FVector4 RayTracingRenderer::ComputeRayResult(const Math::FRay& Ray, uint32 Depth) {
+	if (0u == Depth) {
 		return Math::FVector4{ 1.0f, 1.0f, 1.0f, 1.0f };
 	}
-	RayHitSurface hit;
-	if (Scene->TestRay(Ray, 0.001f, RAY_MAX_DISTANCE, hit)) {
+	RayHitSurface Hit;
+	if (Scene->TestRay(Ray, 0.001f, RAY_MAX_DISTANCE, Hit)) {
 		//const FVector3 direction = RandomOnHemisphere(hit.Normal);
-		if (hit.Material) {
-			Math::FVector4 color;
-			Math::FRay newRay;
-			if (hit.Material->Scatter(Ray, hit.Geometry, color, newRay)) {
-				return color * ComputeRayResult(newRay, RecursiveDepth - 1);
+		if (Hit.Material) {
+			Math::FVector4 Color;
+			Math::FRay OutRay;
+			if (Hit.Material->Scatter(Ray, Hit.Geometry, Hit.Texcoord, Color, OutRay)) {
+				return Color * ComputeRayResult(OutRay, Depth - 1);
 			}
 		}
 		return Math::FVector4{ 1.0f, 1.0f, 1.0f, 1.0f };
 	}
 	else {
-		return RayFallback(Ray);
+		return Scene->RayFallback(Ray);
 	}
 }
 
-Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWithTime& Ray, uint32 RecursiveDepth) {
-	if (0u == RecursiveDepth) {
+Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWithTime& Ray, uint32 Depth) {
+	if (0u == Depth) {
 		return Math::FVector4{ 1.0f, 1.0f, 1.0f, 1.0f };
 	}
 	RayHitSurface Hit;
@@ -71,22 +71,13 @@ Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWith
 		if (Hit.Material) {
 			Math::FVector4 Color;
 			Math::FRayWithTime NewRay;
-			if (Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Color, NewRay)) {
-				return Color * ComputeRayResult(NewRay, RecursiveDepth - 1);
+			if (Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Hit.Texcoord, Color, NewRay)) {
+				return Color * ComputeRayResult(NewRay, Depth - 1);
 			}
 		}
 		return Math::FVector4{ 1.0f, 1.0f, 1.0f, 1.0f };
 	}
 	else {
-		return RayFallback(Ray);
+		return Scene->RayFallback(Ray);
 	}
-}
-
-Math::FVector4 RayTracingRenderer::RayFallback(const Math::FRay& Ray) {
-	// Return sky color
-	const float Alpha = Math::Clamp(Ray.Direction.Y * 0.5f + 0.5f, 0.0f, 1.0f);
-	static const Math::FVector3 Color0{ 1.0f, 1.0f, 1.0f };
-	static const Math::FVector3 Color1{ 0.5f, 0.7f, 1.0f };
-	const Math::FVector3 Color = Alpha * Color1 + (1.0f - Alpha) * Color0;
-	return Math::FVector4{ Color, 1.0f };
 }

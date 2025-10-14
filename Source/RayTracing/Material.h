@@ -1,38 +1,42 @@
 #pragma once
 #include "Core/TUniquePtr.h"
 #include "Math/Geometry.h"
+#include "Raytracing/Texture.h"
+
 class MaterialBase {
 public:
 	virtual ~MaterialBase() = default;
-	virtual bool Scatter(const Math::FRay& inRay, const Math::FRayHit& rayHit, Math::FVector4& outColor, Math::FRay& outRay) const = 0;
-	virtual bool ScatterWithTime(const Math::FRayWithTime& InRay, const Math::FRayHit& RayHit, Math::FVector4& OutColor, Math::FRayWithTime& OutRay) const;
+	virtual bool Scatter(const Math::FRay& Ray, const Math::FRayHit& RayHit, Math::FVector2 Texcoord, Math::FVector4& OutColor, Math::FRay& OutRay) const = 0;
+	virtual bool ScatterWithTime(const Math::FRayWithTime& InRay, const Math::FRayHit& RayHit, Math::FVector2 Texcoord, Math::FVector4& OutColor, Math::FRayWithTime& OutRay) const;
 };
 
 typedef TUniquePtr<MaterialBase> MaterialPtr;
 
 class LambertMaterial: public MaterialBase {
 public:
-	LambertMaterial(const Math::FVector4& albedo) : m_Albedo(albedo) {}
-	LambertMaterial(const Math::FVector3& albedo) : m_Albedo(albedo.X, albedo.Y, albedo.Z, 1.0f) {}
-	bool Scatter(const Math::FRay& inRay, const Math::FRayHit& rayHit, Math::FVector4& outColor, Math::FRay& outRay) const override;
+	explicit LambertMaterial(const Math::FVector4& InAlbedo);
+	explicit LambertMaterial(TexturePtr&& InTexture);
+	LambertMaterial(const Math::FVector3& InAlbedo);
+	bool Scatter(const Math::FRay& Ray, const Math::FRayHit& RayHit, Math::FVector2 Texcoord, Math::FVector4& OutColor, Math::FRay& OutRay) const override;
 private:
-	Math::FVector4 m_Albedo;
+	TexturePtr Texture;
+
 };
 
 class MetalMaterial: public MaterialBase {
 public:
-	MetalMaterial(const Math::FVector4& albedo, float fuzz=0.0f) : m_Albedo(albedo), m_Fuzz(fuzz){}
-	MetalMaterial(const Math::FVector3& albedo, float fuzz=0.0f): m_Albedo(albedo.X, albedo.Y, albedo.Z, 1.0f), m_Fuzz(fuzz) {}
-	bool Scatter(const Math::FRay& inRay, const Math::FRayHit& rayHit, Math::FVector4& outColor, Math::FRay& outRay) const override;
+	MetalMaterial(const Math::FVector4& albedo, float fuzz=0.0f) : Albedo(albedo), Fuzz(fuzz){}
+	MetalMaterial(const Math::FVector3& albedo, float fuzz=0.0f): Albedo(albedo.X, albedo.Y, albedo.Z, 1.0f), Fuzz(fuzz) {}
+	bool Scatter(const Math::FRay& Ray, const Math::FRayHit& RayHit, Math::FVector2 Texcoord, Math::FVector4& OutColor, Math::FRay& OutRay) const override;
 private:
-	Math::FVector4 m_Albedo;
-	float m_Fuzz;
+	Math::FVector4 Albedo;
+	float Fuzz;
 };
 
 class DielectricMaterial: public MaterialBase {
 public:
-	DielectricMaterial(float refractionIndex) : m_RefractionIndex(refractionIndex) {}
-	bool Scatter(const Math::FRay& inRay, const Math::FRayHit& rayHit, Math::FVector4& outColor, Math::FRay& outRay) const override;
+	DielectricMaterial(float refractionIndex) : RefractionIndex(refractionIndex) {}
+	bool Scatter(const Math::FRay& Ray, const Math::FRayHit& RayHit, Math::FVector2 Texcoord, Math::FVector4& OutColor, Math::FRay& OutRay) const override;
 private:
-	float m_RefractionIndex;
+	float RefractionIndex;
 };

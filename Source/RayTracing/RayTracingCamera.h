@@ -12,6 +12,7 @@ public:
 	Math::USize GetRenderSize() const;
 	Math::FRay GetRandomRay(uint32 i, uint32 j) const;
 	Math::FRayWithTime GetRandomRayWithTime(uint32 i, uint32 j) const;
+	void SetupRayData();
 private:
 	// view
 	Math::FVector3 m_Eye{0.0f, 0.0f, 0.0f};
@@ -32,7 +33,5 @@ private:
 	Math::FVector3 m_DeltaV;
 	Math::FVector3 m_DefocusDiskU;
 	Math::FVector3 m_DefocusDiskV;
-
-	void SetupRayData();
 	void ComputeDirections(Math::FVector3& forward, Math::FVector3& right, Math::FVector3& up) const;
 };

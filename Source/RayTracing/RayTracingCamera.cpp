@@ -18,18 +18,15 @@ void RayTracingCamera::SetView(const Math::FVector3& eye, const Math::FVector3& 
 	m_Eye = eye;
 	m_At = at;
 	m_Up = up;
-	SetupRayData();
 }
 
 void RayTracingCamera::SetFov(float fov) {
 	m_Fov = fov;
-	SetupRayData();
 }
 
 void RayTracingCamera::SetFocus(float focusDistance, float defocusAngle) {
 	m_FocusDistance = focusDistance;
 	m_DefocusAngle = defocusAngle;
-	SetupRayData();
 }
 
 Math::USize RayTracingCamera::GetRenderSize() const {

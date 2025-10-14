@@ -29,9 +29,11 @@ public:
 
 	void AddSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial);
 	void AddMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial, const Math::FVector3& MoveTarget);
+	void AddObject(TUniquePtr<RayTracingObjectBase>&& InObject);
 	void BuildHierarchy();
 	bool TestRay(const Math::FRay& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const;
 	bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const;
+	Math::FVector4 RayFallback(const Math::FRay& InRay);
 private:
 	struct BVHNode {
 		uint32 LeftNode;

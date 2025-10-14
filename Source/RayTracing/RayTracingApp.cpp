@@ -39,7 +39,10 @@ namespace {
 	};
 }
 
-inline void InitializeScene(RayTracingScene* scene) {
+static void InitializeScene0(RayTracingCamera* Camera, RayTracingScene* scene) {
+	Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
+	Camera->SetFov(20 * Math::Deg2Rad);
+	Camera->SetFocus(10.0f, 0.6f * Math::Deg2Rad);
 	auto materialGround = MaterialPtr(new LambertMaterial({0.8f, 0.8f, 0.0f, 1.0f}));
 	auto materialMiddle = MaterialPtr(new LambertMaterial({0.1f, 0.2f, 0.5f, 1.0f}));
 	auto materialLeft = MaterialPtr(new DielectricMaterial(1.5f));
@@ -58,8 +61,12 @@ inline void InitializeScene(RayTracingScene* scene) {
 	//scene->AddSphere({ {R,0,-1}, R }, MoveTemp(materialRight));
 }
 
-inline void InitializeScene2(RayTracingScene* scene) {
-	auto materialGround = MaterialPtr(new LambertMaterial({ 0.5f, 0.5f, 0.5f, 1.0f }));
+static void InitializeScene1(RayTracingCamera* Camera, RayTracingScene* scene) {
+	Camera->SetFov(20 * Math::Deg2Rad);
+	Camera->SetFocus(10.0f, 0.6f * Math::Deg2Rad);
+	Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
+
+	auto materialGround = MaterialPtr(new LambertMaterial(TexturePtr(new CheckerTexture(Math::Color8{0.2f, 0.3f, 0.1f, 1.0f}, Math::Color8{0.9f, 0.9f, 0.8f, 1.0f}, 0.32f))));
 	scene->AddSphere({ {0.0f, -1000.0f, 0.0f}, 1000.0f }, MoveTemp(materialGround));
 
 	for (int a = -11; a < 11; a++) {
@@ -95,21 +102,28 @@ inline void InitializeScene2(RayTracingScene* scene) {
 	scene->AddSphere({ {4.0f, 1.0f, 0.0f}, 1.0f }, MaterialPtr(new MetalMaterial({ 0.7f, 0.6f, 0.5f }, 0.0f)));
 }
 
+static void InitializeScene2(RayTracingCamera* Camera, RayTracingScene* Scene) {
+	Camera->SetFov(20 * Math::Deg2Rad);
+	Camera->SetFocus(10.0f, 0.6f * Math::Deg2Rad);
+	Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
+
+	const Math::Color8 ColorEven{0.2f, 0.3f, 0.1f, 1.0f};
+	const Math::Color8 ColorOdd{0.9f, 0.9f, 0.8f, 1.0f};
+	Scene->AddObject(TUniquePtr(new RTSphere({{0.0f, 10.0f, 0.0f}, 10.0f}, MaterialPtr(new LambertMaterial(TexturePtr(new CheckerTexture(ColorEven, ColorOdd, 0.32f)))))));
+	Scene->AddObject(TUniquePtr(new RTSphere({ {0.0f, -10.0f, 0.0f}, 10.0f }, MaterialPtr(new LambertMaterial(TexturePtr(new CheckerTexture(ColorEven, ColorOdd, 0.32f)))))));
+}
+
 
 RayTracingApp::RayTracingApp() {
 	// ========== step1. Initialize context ==========
 	InitializeRHI( WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	// ========== step2. Scene rendering ==========
-	// Initialize camera
-	const Math::USize renderSize{(uint32)(WINDOW_WIDTH * RENDER_SCALE), (uint32)(WINDOW_HEIGHT * RENDER_SCALE)};
-	Camera.Reset(new RayTracingCamera(renderSize));
-	Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
-	Camera->SetFov(20 * Math::Deg2Rad);
-	Camera->SetFocus(10.0f, 0.6f * Math::Deg2Rad);
 	// Create ray tracing scene
+	Camera.Reset(new RayTracingCamera({ (uint32)(WINDOW_WIDTH * RENDER_SCALE), (uint32)(WINDOW_HEIGHT * RENDER_SCALE) }));
 	Scene.Reset(new RayTracingScene());
-	InitializeScene2(Scene.Get());
+	InitializeScene2(Camera.Get(), Scene.Get()); // TODO test
+	Camera->SetupRayData();
 	Scene->BuildHierarchy();
 
 	RayTracingRenderer Renderer{ Camera.Get(), Scene.Get(), NUM_RAYS_PER_PIXEL, RAY_RECURSIVE_DEPTH};

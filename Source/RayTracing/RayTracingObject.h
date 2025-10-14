@@ -4,6 +4,7 @@
 
 struct RayHitSurface {
 	Math::FRayHit Geometry;
+	Math::FVector2 Texcoord;
 	const MaterialBase* Material{ nullptr };
 };
 
