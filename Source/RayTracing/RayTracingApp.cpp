@@ -21,28 +21,7 @@ static constexpr float RENDER_SCALE =
 #endif
 ;
 
-namespace {
-	// print the cost
-	class ProfilePrintScope {
-	public:
-		ProfilePrintScope(std::string&& info) : m_Info(MoveTemp(info)), m_StartTime(NowTimePoint()) {
-			m_StartTime = NowTimePoint();
-		}
-		~ProfilePrintScope() {
-			const auto endTime = NowTimePoint();
-			const float durationMS = GetDurationMill<float>(m_StartTime, endTime);
-			LOG_INFO("Cost of %s is %.3f ms", m_Info.c_str(), durationMS);
-		}
-	private:
-		std::string m_Info;
-		TimePoint m_StartTime;
-	};
-}
-
 static void InitializeScene0(RayTracingCamera* Camera, RayTracingScene* scene) {
-	Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
-	Camera->SetFov(20 * Math::Deg2Rad);
-	Camera->SetFocus(10.0f, 0.6f * Math::Deg2Rad);
 	auto materialGround = MaterialPtr(new LambertMaterial({0.8f, 0.8f, 0.0f, 1.0f}));
 	auto materialMiddle = MaterialPtr(new LambertMaterial({0.1f, 0.2f, 0.5f, 1.0f}));
 	auto materialLeft = MaterialPtr(new DielectricMaterial(1.5f));
@@ -61,13 +40,9 @@ static void InitializeScene0(RayTracingCamera* Camera, RayTracingScene* scene) {
 	//scene->AddSphere({ {R,0,-1}, R }, MoveTemp(materialRight));
 }
 
-static void InitializeScene1(RayTracingCamera* Camera, RayTracingScene* scene) {
-	Camera->SetFov(20 * Math::Deg2Rad);
-	Camera->SetFocus(10.0f, 0.6f * Math::Deg2Rad);
-	Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
-
+static void InitializeScene1(RayTracingCamera* Camera, RayTracingScene* Scene) {
 	auto materialGround = MaterialPtr(new LambertMaterial(TexturePtr(new CheckerTexture(Math::Color8{0.2f, 0.3f, 0.1f, 1.0f}, Math::Color8{0.9f, 0.9f, 0.8f, 1.0f}, 0.32f))));
-	scene->AddSphere({ {0.0f, -1000.0f, 0.0f}, 1000.0f }, MoveTemp(materialGround));
+	Scene->AddSphere({ {0.0f, -1000.0f, 0.0f}, 1000.0f }, MoveTemp(materialGround));
 
 	for (int a = -11; a < 11; a++) {
 		for (int b = -11; b < 11; b++) {
@@ -80,41 +55,58 @@ static void InitializeScene1(RayTracingCamera* Camera, RayTracingScene* scene) {
 					auto albedo = Math::Random01Vector() * Math::Random01Vector();
 					auto mat = MaterialPtr(new LambertMaterial(albedo));
 					auto MoveTarget = center + Math::FVector3{0, Math::Random(0, 0.5f), 0};
-					scene->AddMovableSphere({ center, 0.2f }, MoveTemp(mat), MoveTarget);
+					Scene->AddMovableSphere({ center, 0.2f }, MoveTemp(mat), MoveTarget);
 				}
 				else if (chooseMaterial < 0.95f) {
 					// metal
 					auto albedo = Math::RandomVector(0.5f, 1.0f);
 					auto fuzz = Math::Random(0.0f, 0.5f);
 					auto mat = MaterialPtr(new MetalMaterial(albedo, fuzz));
-					scene->AddSphere({ center, 0.2f }, MoveTemp(mat));
+					Scene->AddSphere({ center, 0.2f }, MoveTemp(mat));
 				}
 				else {
 					// glass
 					auto mat = MaterialPtr(new DielectricMaterial(1.5f));
-					scene->AddSphere({ center, 0.2f }, MoveTemp(mat));
+					Scene->AddSphere({ center, 0.2f }, MoveTemp(mat));
 				}
 			}
 		}
 	}
-	scene->AddSphere({ {0.0f, 1.0f, 0.0f}, 1.0f }, MaterialPtr(new DielectricMaterial(1.5f)));
-	scene->AddSphere({ {-4.0f, 1.0f, 0.0f}, 1.0f }, MaterialPtr(new LambertMaterial({ 0.4f, 0.2f, 0.1f })));
-	scene->AddSphere({ {4.0f, 1.0f, 0.0f}, 1.0f }, MaterialPtr(new MetalMaterial({ 0.7f, 0.6f, 0.5f }, 0.0f)));
+	Scene->AddSphere({ {0.0f, 1.0f, 0.0f}, 1.0f }, MaterialPtr(new DielectricMaterial(1.5f)));
+	Scene->AddSphere({ {-4.0f, 1.0f, 0.0f}, 1.0f }, MaterialPtr(new LambertMaterial({ 0.4f, 0.2f, 0.1f })));
+	Scene->AddSphere({ {4.0f, 1.0f, 0.0f}, 1.0f }, MaterialPtr(new MetalMaterial({ 0.7f, 0.6f, 0.5f }, 0.0f)));
 }
 
 static void InitializeScene2(RayTracingCamera* Camera, RayTracingScene* Scene) {
-	Camera->SetFov(20 * Math::Deg2Rad);
-	Camera->SetFocus(10.0f, 0.6f * Math::Deg2Rad);
-	Camera->SetView({ 13,2,3 }, { 0,0,0 }, { 0,1,0 });
-
 	const Math::Color8 ColorEven{0.2f, 0.3f, 0.1f, 1.0f};
 	const Math::Color8 ColorOdd{0.9f, 0.9f, 0.8f, 1.0f};
-	Scene->AddObject(TUniquePtr(new RTSphere({{0.0f, 10.0f, 0.0f}, 10.0f}, MaterialPtr(new LambertMaterial(TexturePtr(new CheckerTexture(ColorEven, ColorOdd, 0.32f)))))));
-	Scene->AddObject(TUniquePtr(new RTSphere({ {0.0f, -10.0f, 0.0f}, 10.0f }, MaterialPtr(new LambertMaterial(TexturePtr(new CheckerTexture(ColorEven, ColorOdd, 0.32f)))))));
+	Scene->AddObject(TUniquePtr<RTSphere>(new RTSphere({{0.0f, 10.0f, 0.0f}, 10.0f}, MaterialPtr(new LambertMaterial(TexturePtr(new CheckerTexture(ColorEven, ColorOdd, 0.32f)))))));
+	Scene->AddObject(TUniquePtr<RTSphere>(new RTSphere({ {0.0f, -10.0f, 0.0f}, 10.0f }, MaterialPtr(new LambertMaterial(TexturePtr(new CheckerTexture(ColorEven, ColorOdd, 0.32f)))))));
 }
 
+static void InitializeScene3(RayTracingCamera* Camera, RayTracingScene* Scene) {
+	MaterialPtr EarthMaterial{new LambertMaterial(TexturePtr{new ImageTexture("earthmap.jpg")})};
+	Scene->AddObject(TUniquePtr<RTSphere>(new RTSphere(Math::FSphere{{0.0f, 0.0f, 0.0f}, 2.0f}, std::move(EarthMaterial))));
+}
 
 RayTracingApp::RayTracingApp() {
+
+	// print the cost
+	class ProfilePrintScope {
+	public:
+		ProfilePrintScope(std::string&& info) : m_Info(MoveTemp(info)), m_StartTime(NowTimePoint()) {
+			m_StartTime = NowTimePoint();
+		}
+		~ProfilePrintScope() {
+			const auto endTime = NowTimePoint();
+			const float durationMS = GetDurationMill<float>(m_StartTime, endTime);
+			LOG_INFO("Cost of %s is %.3f ms", m_Info.c_str(), durationMS);
+		}
+	private:
+		std::string m_Info;
+		TimePoint m_StartTime;
+	};
+
 	// ========== step1. Initialize context ==========
 	InitializeRHI( WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -122,7 +114,7 @@ RayTracingApp::RayTracingApp() {
 	// Create ray tracing scene
 	Camera.Reset(new RayTracingCamera({ (uint32)(WINDOW_WIDTH * RENDER_SCALE), (uint32)(WINDOW_HEIGHT * RENDER_SCALE) }));
 	Scene.Reset(new RayTracingScene());
-	InitializeScene2(Camera.Get(), Scene.Get()); // TODO test
+	InitializeScene3(Camera.Get(), Scene.Get()); // TODO test
 	Camera->SetupRayData();
 	Scene->BuildHierarchy();
 
@@ -136,15 +128,15 @@ RayTracingApp::RayTracingApp() {
 	RenderResult Result = Renderer.GetRenderResult();
 	// ========== step3. Display the render texture ==========
 	// Create texture and upload data
-	Texture = GetRHI()->CreateTexture(Result.Width, Result.Height, 1, 1, ERHIFormat::R8G8B8A8_UNorm);
-	GetRHI()->UpdateTextureData(Texture, Result.Data, (size_t)Result.Width * (size_t)Result.Height * sizeof(Math::Color8));
+	RHITexture = GetRHI()->CreateTexture(Result.Width, Result.Height, 1, 1, ERHIFormat::R8G8B8A8_UNorm);
+	GetRHI()->UpdateTextureData(RHITexture, Result.Data, (size_t)Result.Width * (size_t)Result.Height * sizeof(Math::Color8));
 }
 
 RayTracingApp::~RayTracingApp() {
-	GetRHI()->DestroyTexture(Texture);
+	GetRHI()->DestroyTexture(RHITexture);
 	ReleaseRHI();
 }
 
 void RayTracingApp::Run() {
-	while(GetRHI()->DrawTexture(Texture)){}
+	while(GetRHI()->DrawTexture(RHITexture)){}
 }

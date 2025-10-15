@@ -13,6 +13,8 @@ file(GLOB COMMON_FILES
  "${SOURCE_PATH}/RHI/*.cpp"
  "${SOURCE_PATH}/RHI/Common/*.h"
  "${SOURCE_PATH}/RHI/Common/*.cpp"
+ "${SOURCE_PATH}/Resource/*.h"
+ "${SOURCE_PATH}/Resource/*.cpp"
  "${SOURCE_PATH}/RayTracing/*.h"
  "${SOURCE_PATH}/RayTracing/*.cpp"
  )
@@ -47,6 +49,7 @@ endif()
 target_include_directories(${TARGET_NAME} PRIVATE
     ${THIRD_PARTY_PATH}/Vulkan/include
     ${THIRD_PARTY_PATH}/glfw/include
+    ${THIRD_PARTY_PATH}/stbimage/
  )
 
 if(PLATFORM_WINDOWS)

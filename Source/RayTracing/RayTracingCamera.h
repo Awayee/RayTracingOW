@@ -15,23 +15,23 @@ public:
 	void SetupRayData();
 private:
 	// view
-	Math::FVector3 m_Eye{0.0f, 0.0f, 0.0f};
-	Math::FVector3 m_At{0.0f, 0.0f, -1.0f};
-	Math::FVector3 m_Up{0.0f, 1.0f, 0.0f};
-	float m_Fov{1.0f}; // radian
+	Math::FVector3 Eye{0.0f, 0.0f, 0.0f};
+	Math::FVector3 At{0.0f, 0.0f, -1.0f};
+	Math::FVector3 Up{0.0f, 1.0f, 0.0f};
+	float Fov{1.0f}; // radian
 
 	// defocus
-	float m_DefocusAngle {0.174f};// radian
-	float m_FocusDistance {3.4f};
+	float FocusDistance {3.4f};
+	float DefocusAngle {0.174f};// radian
 
 	// render
 	Math::USize RenderSize;
 
 	// ray data
-	Math::FVector3 m_PixelStart;
-	Math::FVector3 m_DeltaU;
-	Math::FVector3 m_DeltaV;
-	Math::FVector3 m_DefocusDiskU;
-	Math::FVector3 m_DefocusDiskV;
+	Math::FVector3 PixelStart;
+	Math::FVector3 DeltaU;
+	Math::FVector3 DeltaV;
+	Math::FVector3 DefocusDiskU;
+	Math::FVector3 DefocusDiskV;
 	void ComputeDirections(Math::FVector3& forward, Math::FVector3& right, Math::FVector3& up) const;
 };

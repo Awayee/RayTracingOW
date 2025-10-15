@@ -13,5 +13,5 @@ public:
 private:
 	TUniquePtr<RayTracingScene> Scene;
 	TUniquePtr<RayTracingCamera> Camera;
-	RHITextureHandle Texture;
+	RHITextureHandle RHITexture;
 };

@@ -59,7 +59,17 @@ namespace Math {
 		const FVector3 OutWardNormal = (OutHit.Position - Center) / Radius;
 		OutHit.FrontFace = OutWardNormal.Dot(InRay.Direction) < 0.0f;
 		OutHit.Normal = OutHit.FrontFace ? OutWardNormal : -OutWardNormal;
+		OutHit.Texcoord = GetTexcoordByNormal(OutWardNormal);
 		return true;
+	}
+
+	Math::FVector2 FSphere::GetTexcoordByNormal(const Math::FVector3& Normal) {
+		const float Theta = Math::ACos(-Normal.Y);
+		const float Phi = Math::ATan2(-Normal.Z, Normal.X) + Math::PI;
+		return Math::FVector2{
+			Phi / (2.0f * Math::PI),
+			Theta / Math::PI
+		};
 	}
 
 	FAABB3 FAABB3::CenterExtent(const Math::FVector3& Center, const FVector3& Extent) {

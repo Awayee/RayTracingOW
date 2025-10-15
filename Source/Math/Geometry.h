@@ -18,6 +18,7 @@ namespace Math {
 	struct FRayHit {
 		FVector3 Position;
 		FVector3 Normal;
+		FVector2 Texcoord;
 		float Distance;
 		bool FrontFace;
 		FRayHit();
@@ -29,6 +30,7 @@ namespace Math {
 		FSphere(const FVector3& center, float radius) : Center(center), Radius(Max(0.0f, radius)) {}
 		float TestRay(const FRay& InRay) const;
 		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const;
+		static Math::FVector2 GetTexcoordByNormal(const Math::FVector3& Normal); // Normal is normlized
 	};
 
 	struct FAABB3

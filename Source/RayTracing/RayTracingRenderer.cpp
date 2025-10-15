@@ -50,7 +50,7 @@ Math::FVector4 RayTracingRenderer::ComputeRayResult(const Math::FRay& Ray, uint3
 		if (Hit.Material) {
 			Math::FVector4 Color;
 			Math::FRay OutRay;
-			if (Hit.Material->Scatter(Ray, Hit.Geometry, Hit.Texcoord, Color, OutRay)) {
+			if (Hit.Material->Scatter(Ray, Hit.Geometry, Color, OutRay)) {
 				return Color * ComputeRayResult(OutRay, Depth - 1);
 			}
 		}
@@ -71,7 +71,7 @@ Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWith
 		if (Hit.Material) {
 			Math::FVector4 Color;
 			Math::FRayWithTime NewRay;
-			if (Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Hit.Texcoord, Color, NewRay)) {
+			if (Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Color, NewRay)) {
 				return Color * ComputeRayResult(NewRay, Depth - 1);
 			}
 		}
