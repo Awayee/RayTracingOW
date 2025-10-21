@@ -45,4 +45,29 @@ namespace Math {
 		void Union(const FAABB3& Other);
 		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax) const;
 	};
+
+	struct FPlane {
+		Math::FVector3 Normal;
+		float D;
+		FPlane(const Math::FVector3& InNormal, float InD);
+		FPlane(const Math::FVector3& InQ, const Math::FVector3& InU, const Math::FVector3& InV);
+		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, Math::FRayHit& OutHit) const;
+	};
+
+
+	class FQuad {
+	public:
+		FQuad() = default;
+		FQuad(const FVector3& InQ, const FVector3& InU, const FVector3& InV);
+		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const;
+		FAABB3 GetAABB() const;
+	private:
+		//   V - 
+		//  /  /
+		// Q - U
+		FVector3 Q;
+		FVector3 U;
+		FVector3 V;
+		FPlane Plane;
+	};
 }

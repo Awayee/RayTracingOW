@@ -24,6 +24,23 @@ Math::FAABB3 RTSphere::GetAABB() const {
 	return AABB;
 }
 
+RTQuad::RTQuad(const Math::FQuad& InQuad, MaterialPtr&& InMaterial): RayTracingObjectBase(), GeometryQuad(InQuad), SurfaceMaterial(MoveTemp(InMaterial)) {
+	// Compute the bounding box of all four vertices.
+	AABB = InQuad.GetAABB();
+}
+
+bool RTQuad::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+	if(GeometryQuad.TestRay(Ray, DistanceMin, DistanceMax, OutHitSurface.Geometry)) {
+		OutHitSurface.Material = SurfaceMaterial.Get();
+		return true;
+	}
+	return false;
+}
+
+Math::FAABB3 RTQuad::GetAABB() const {
+	return AABB;
+}
+
 RTMovableSphere::RTMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMatrial, const Math::FVector3& InMoveTarget):
 RTSphere(InSphere, MoveTemp(InMatrial)), MoveTarget(InMoveTarget){
 	const Math::FVector3 MoveVector = MoveTarget - GeometrySphere.Center;

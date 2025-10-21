@@ -6,6 +6,8 @@ namespace Math {
 
 	float Random(float min, float max);
 
+	int RandomInt(int Min, int Max);
+
 	FVector3 Random01Vector();
 
 	FVector3 RandomVector(float min, float max);

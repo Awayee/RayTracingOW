@@ -85,7 +85,7 @@ namespace Math {
 	}
 
 	bool FAABB3::IsValid() const {
-		return Math::FVector3::AllGreater(Max, Min);
+		return !Extent().IsNearlyZero();
 	}
 
 	int FAABB3::GetMaxAxis() const {
@@ -110,11 +110,18 @@ namespace Math {
 	}
 
 	bool FAABB3::TestRay(const FRay& InRay, float DistanceMin, float DistanceMax) const{
+		// Reference: https://raytracing.github.io/books/RayTracingTheNextWeek.html#boundingvolumehierarchies/hierarchiesofboundingvolumes
 		for(int Axis=0; Axis<3; ++Axis) {
 			const float IntervalMin = Min[Axis];
 			const float IntervalMax = Max[Axis];
 			const float DirectionInAxis = InRay.Direction[Axis];
 			const float OriginInAxis = InRay.Origin[Axis];
+			// Parallel direction
+			if (Math::IsNearlyZero(DirectionInAxis)) {
+				if(OriginInAxis < IntervalMin || OriginInAxis > IntervalMax) {
+					return false;
+				}
+			}
 			// X = O + t * D => t = (X - O) / D
 			const float t0 = (IntervalMin - OriginInAxis) / DirectionInAxis;
 			const float t1 = (IntervalMax - OriginInAxis) / DirectionInAxis;
@@ -133,5 +140,58 @@ namespace Math {
 			}
 		}
 		return true;
+	}
+
+	FPlane::FPlane(const Math::FVector3& InNormal, float InD): Normal(InNormal), D(InD) {
+	}
+
+	FPlane::FPlane(const Math::FVector3& InQ, const Math::FVector3& InU, const Math::FVector3& InV) {
+		Normal = InU.Cross(InV).Normalize();
+		D = Normal.Dot(InQ);
+	}
+
+	bool FPlane::TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, Math::FRayHit& OutHit) const {
+		const float Denom = Normal.Dot(InRay.Direction);
+		if(Math::IsNearlyZero(Denom)) {
+			return false;
+		}
+		const float t = (D - InRay.Origin.Dot(Normal)) / Denom;
+		if(t < DistanceMin || t > DistanceMax) {
+			return false;
+		}
+		OutHit.Distance = t;
+		OutHit.Position = InRay.At(t);
+		OutHit.FrontFace = InRay.Direction.Dot(Normal) < 0.0f;
+		OutHit.Normal = OutHit.FrontFace ? Normal : -Normal;
+		return true;
+	}
+
+	FQuad::FQuad(const FVector3& InQ, const FVector3& InU, const FVector3& InV) :Q(InQ), U(InU), V(InV), Plane{ Q, U, V } {
+	}
+
+	bool FQuad::TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const {
+		// Reference: https://raytracing.github.io/books/RayTracingTheNextWeek.html#quadrilaterals/ray-planeintersection
+		if(!Plane.TestRay(InRay, DistanceMin, DistanceMax, OutHit)) {
+			return false;
+		}
+		// Whether the intersected point lies in the quad
+		const Math::FVector3 NormalUnorm = U.Cross(V);
+		const Math::FVector3 W = NormalUnorm / NormalUnorm.LengthSquared();
+		const Math::FVector3 HitVec = OutHit.Position - Q;
+		float Alpha = W.Dot(HitVec.Cross(V));
+		float Beta  = W.Dot(U.Cross(HitVec));
+		if(Alpha < 0.0f || Alpha > 1.0f || Beta < 0.0f || Beta > 1.0f) {
+			return false;
+		}
+		OutHit.Texcoord = {Alpha, Beta};
+		return true;
+	}
+
+	FAABB3 FQuad::GetAABB() const {
+		const Math::FVector3 P = Q + U + V;
+		Math::FAABB3 AABB{ Q, P };
+		const FAABB3 TempAABB{ Q + U, Q + V };
+		AABB.Union(TempAABB);
+		return AABB;
 	}
 }

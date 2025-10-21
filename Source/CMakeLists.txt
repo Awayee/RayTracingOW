@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
 
-find_package(OpenMP REQUIRED)
-
 set(TARGET_NAME "RayTracingApp")
 file(GLOB COMMON_FILES 
  "${SOURCE_PATH}/*.cpp"

@@ -2,6 +2,7 @@
 #include <vector>
 #include "Math/Color.h"
 #include "Core/TUniquePtr.h"
+#include "Math/Perlin.h"
 
 class Texture{
 public:
@@ -41,4 +42,13 @@ private:
     uint32 Width;
     uint32 Height;
     uint32 BytesPerPixel;
+};
+
+class NoiseTexture: public Texture {
+public:
+    NoiseTexture(float InScale);
+    virtual Math::Color8 SampleColor8(Math::FVector2 Texcoord, const Math::FVector3& Point) const override;
+private:
+    Math::Perlin Noise;
+    float Scale;
 };

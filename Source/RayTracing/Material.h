@@ -1,7 +1,7 @@
 #pragma once
 #include "Core/TUniquePtr.h"
 #include "Math/Geometry.h"
-#include "Raytracing/Texture.h"
+#include "RayTracing/Texture.h"
 
 class MaterialBase {
 public:

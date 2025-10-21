@@ -61,3 +61,13 @@ Math::Color8 ImageTexture::SampleColor8(Math::FVector2 Texcoord, const Math::FVe
 	}
 	return Color;
 }
+
+NoiseTexture::NoiseTexture(float InScale): Scale(InScale) {
+}
+
+Math::Color8 NoiseTexture::SampleColor8(Math::FVector2 Texcoord, const Math::FVector3& Point) const {
+	//const Math::FVector3 Vec = Math::FVector3{1.0f, 1.0f, 1.0f} * (Noise.SmoothNoise(Scale * Point) * 0.5f + 0.5f);
+	//const Math::FVector3 Vec = Math::FVector3{1.0f, 1.0f, 1.0f} *  Noise.Turbulence(Point, 7);
+	const Math::FVector3 Vec = Math::FVector3{0.5f} * (1.0f + Math::Sin(Scale * Point.Z + 10.0f * Noise.Turbulence(Point, 7)));
+	return Math::Color8{Math::FVector4{Vec, 1.0f}};
+}

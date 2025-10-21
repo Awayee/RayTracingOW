@@ -84,9 +84,33 @@ static void InitializeScene2(RayTracingCamera* Camera, RayTracingScene* Scene) {
 	Scene->AddObject(TUniquePtr<RTSphere>(new RTSphere({ {0.0f, -10.0f, 0.0f}, 10.0f }, MaterialPtr(new LambertMaterial(TexturePtr(new CheckerTexture(ColorEven, ColorOdd, 0.32f)))))));
 }
 
-static void InitializeScene3(RayTracingCamera* Camera, RayTracingScene* Scene) {
+static void InitializeEarth(RayTracingCamera* Camera, RayTracingScene* Scene) {
 	MaterialPtr EarthMaterial{new LambertMaterial(TexturePtr{new ImageTexture("earthmap.jpg")})};
 	Scene->AddObject(TUniquePtr<RTSphere>(new RTSphere(Math::FSphere{{0.0f, 0.0f, 0.0f}, 2.0f}, std::move(EarthMaterial))));
+}
+
+static void InitializePerlinSpheres(RayTracingCamera* Camera, RayTracingScene* Scene) {
+	Scene->AddObject(TUniquePtr<RTSphere>(new RTSphere({ {0.0f,-1000.0f,0.0f}, 1000.0f}, MaterialPtr(new LambertMaterial{TexturePtr(new NoiseTexture(4.0f))}))));
+	Scene->AddObject(TUniquePtr<RTSphere>(new RTSphere({ {0.0f,2.0f,0.0f}, 2.0f }, MaterialPtr(new LambertMaterial{ TexturePtr(new NoiseTexture(4.0f)) }))));
+}
+
+static void InitializeQuads(RayTracingCamera* Camera, RayTracingScene* Scene) {
+
+	// Materials
+	MaterialPtr LeftRed     = MaterialPtr(new LambertMaterial(Math::FVector3{1.0f, 0.2f, 0.2f}));
+	MaterialPtr BackGreen   = MaterialPtr(new LambertMaterial(Math::FVector3{0.2f, 1.0f, 0.2f}));
+	MaterialPtr RightBlue   = MaterialPtr(new LambertMaterial(Math::FVector3{0.2f, 0.2f, 1.0f}));
+	MaterialPtr UpperOrange = MaterialPtr(new LambertMaterial(Math::FVector3{1.0f, 0.5f, 0.0f}));
+	MaterialPtr LowerTeal   = MaterialPtr(new LambertMaterial(Math::FVector3{0.2f, 0.8f, 0.8f}));
+
+	Scene->AddObject(TUniquePtr<RTQuad>(new RTQuad(Math::FQuad{ {-3.0f, -2.0f, 5.0f}, {0.0f, 0.0f, -4.0f}, {0.0f, 4.0f, 0.0f}}, MoveTemp(LeftRed))));
+	Scene->AddObject(TUniquePtr<RTQuad>(new RTQuad(Math::FQuad{ {-2.0f, -2.0f, 0.0f}, {4.0f, 0.0f, 0.0f}, {0.0f, 4.0f, 0.0f} }, MoveTemp(BackGreen))));
+	Scene->AddObject(TUniquePtr<RTQuad>(new RTQuad(Math::FQuad{ {3.0f, -2.0f, 1.0f}, {0.0f, 0.0f, 4.0f}, {0.0f, 4.0f, 0.0f} }, MoveTemp(RightBlue))));
+	Scene->AddObject(TUniquePtr<RTQuad>(new RTQuad(Math::FQuad{ {-2.0f, 3.0f, 1.0f}, {4.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 4.0f} }, MoveTemp(UpperOrange))));
+	Scene->AddObject(TUniquePtr<RTQuad>(new RTQuad(Math::FQuad{ {-2.0f, -3.0f, 5.0f}, {4.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -4.0f} }, MoveTemp(LowerTeal))));
+
+	Camera->SetView({0.0f, 0.0f, 9.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
+	Camera->SetFov(80.0f * Math::Deg2Rad);
 }
 
 RayTracingApp::RayTracingApp() {
@@ -114,7 +138,7 @@ RayTracingApp::RayTracingApp() {
 	// Create ray tracing scene
 	Camera.Reset(new RayTracingCamera({ (uint32)(WINDOW_WIDTH * RENDER_SCALE), (uint32)(WINDOW_HEIGHT * RENDER_SCALE) }));
 	Scene.Reset(new RayTracingScene());
-	InitializeScene3(Camera.Get(), Scene.Get()); // TODO test
+	InitializeQuads(Camera.Get(), Scene.Get()); // TODO test
 	Camera->SetupRayData();
 	Scene->BuildHierarchy();
 

@@ -14,6 +14,10 @@ namespace Math {
 		return min + (max - min) * Random01();
 	}
 
+	int RandomInt(int Min, int Max) {
+		return (int)Random((float)Min, (float)(Max+1));
+	}
+
 	FVector3 Random01Vector() {
 		return FVector3{ Random01(), Random01(), Random01() };
 	}
@@ -24,14 +28,12 @@ namespace Math {
 
 	FVector3 RandomUintVector() {
 		FVector3 result = RandomVector(-1.0f, 1.0f);
-		float lengthSq = result.LengthSquared();
-		if (lengthSq < FLOAT_MIN) {
+		if (result.IsNearlyZero()) {
 			result = FVector3{ 0,1,0 };
 		}
-		else if (lengthSq > 1.0f) {
+		else{
 			result.NormalizeSelf();
 		}
-		result.NormalizeSelf();
 		return result;
 	}
 

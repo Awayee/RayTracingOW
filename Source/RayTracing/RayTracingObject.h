@@ -26,6 +26,17 @@ protected:
 	Math::FAABB3 AABB;
 };
 
+class RTQuad: public RayTracingObjectBase {
+public:
+	RTQuad(const Math::FQuad& InQuad, MaterialPtr&& InMaterial);
+	virtual bool TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
+	virtual Math::FAABB3 GetAABB() const override;
+private:
+	Math::FQuad GeometryQuad;
+	Math::FAABB3 AABB;
+	MaterialPtr SurfaceMaterial;
+};
+
 class RTMovableSphere: public RTSphere {
 public:
 	RTMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMatrial, const Math::FVector3& InMoveTarget);
