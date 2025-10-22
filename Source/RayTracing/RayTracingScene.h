@@ -24,9 +24,9 @@ private:
 
 class RayTracingScene {
 public:
-	RayTracingScene() = default;
+	RayTracingScene();
 	~RayTracingScene() = default;
-
+	void SetBackground(TexturePtr&& Texture);
 	void AddSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial);
 	void AddMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial, const Math::FVector3& MoveTarget);
 	void AddObject(TUniquePtr<RayTracingObjectBase>&& InObject);
@@ -48,6 +48,7 @@ private:
 		BVHNode& operator=(BVHNode&&)noexcept=default;
 	};
 
+	TexturePtr Background;
 	ObjectArray Objects;
 	std::vector<BVHNode> Nodes;
 

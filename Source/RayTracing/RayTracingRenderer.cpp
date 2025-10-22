@@ -66,18 +66,22 @@ Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWith
 		return Math::FVector4{ 1.0f, 1.0f, 1.0f, 1.0f };
 	}
 	RayHitSurface Hit;
-	if (Scene->TestRayWithTime(Ray, 0.001f, RAY_MAX_DISTANCE, Hit)) {
-		//const FVector3 direction = RandomOnHemisphere(hit.Normal);
-		if (Hit.Material) {
-			Math::FVector4 Color;
-			Math::FRayWithTime NewRay;
-			if (Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Color, NewRay)) {
-				return Color * ComputeRayResult(NewRay, Depth - 1);
-			}
-		}
-		return Math::FVector4{ 1.0f, 1.0f, 1.0f, 1.0f };
-	}
-	else {
+	if (!Scene->TestRayWithTime(Ray, 0.001f, RAY_MAX_DISTANCE, Hit)) {
 		return Scene->RayFallback(Ray);
 	}
+
+	//const FVector3 direction = RandomOnHemisphere(hit.Normal);
+	if (!Hit.Material) {
+		// Default material color;
+		return Math::FVector4{ 1.0f, 0.0f, 1.0f, 1.0f };
+	}
+
+	const Math::FVector4 EmittedColor = Hit.Material->Emitted(Hit.Geometry);
+	Math::FVector4 Attenuation;
+	Math::FRayWithTime NewRay;
+	if (!Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Attenuation, NewRay)) {
+		return EmittedColor;
+	}
+	const Math::FVector4 ScatteredColor = Attenuation * ComputeRayResultWithTime(NewRay, Depth - 1);
+	return ScatteredColor + EmittedColor;
 }

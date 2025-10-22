@@ -171,27 +171,35 @@ namespace Math {
 
 	bool FQuad::TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const {
 		// Reference: https://raytracing.github.io/books/RayTracingTheNextWeek.html#quadrilaterals/ray-planeintersection
-		if(!Plane.TestRay(InRay, DistanceMin, DistanceMax, OutHit)) {
+		FRayHit TempHit;
+		if(!Plane.TestRay(InRay, DistanceMin, DistanceMax, TempHit)) {
 			return false;
 		}
 		// Whether the intersected point lies in the quad
 		const Math::FVector3 NormalUnorm = U.Cross(V);
 		const Math::FVector3 W = NormalUnorm / NormalUnorm.LengthSquared();
-		const Math::FVector3 HitVec = OutHit.Position - Q;
+		const Math::FVector3 HitVec = TempHit.Position - Q;
 		float Alpha = W.Dot(HitVec.Cross(V));
 		float Beta  = W.Dot(U.Cross(HitVec));
 		if(Alpha < 0.0f || Alpha > 1.0f || Beta < 0.0f || Beta > 1.0f) {
 			return false;
 		}
+		OutHit = TempHit;
 		OutHit.Texcoord = {Alpha, Beta};
 		return true;
 	}
 
 	FAABB3 FQuad::GetAABB() const {
-		const Math::FVector3 P = Q + U + V;
-		Math::FAABB3 AABB{ Q, P };
-		const FAABB3 TempAABB{ Q + U, Q + V };
-		AABB.Union(TempAABB);
-		return AABB;
+		Math::FVector3 Points[4];
+		Points[0] = Q;
+		Points[1] = Q+U;
+		Points[2] = Q+V;
+		Points[3] = Points[1]+V;
+		Math::FVector3 Min{ FLOAT_MAX }, Max{ -FLOAT_MAX };
+		for(const Math::FVector3& Point: Points) {
+			Min = Math::FVector3::Min(Min, Point);
+			Max = Math::FVector3::Max(Max, Point);
+		}
+		return Math::FAABB3{Min, Max};
 	}
 }

@@ -8,6 +8,10 @@ static float Reflectance(float cosine, float refractionIndex) {
 	return r0 + (1 - r0) * Math::Pow((1 - cosine), 5.0f);
 }
 
+bool MaterialBase::Scatter(const Math::FRay& Ray, const Math::FRayHit& RayHit, Math::FVector4& OutColor, Math::FRay& OutRay) const {
+	return false;
+}
+
 bool MaterialBase::ScatterWithTime(const Math::FRayWithTime& InRay, const Math::FRayHit& RayHit, Math::FVector4& OutColor, Math::FRayWithTime& OutRay) const {
 	if(Scatter((const Math::FRay&)InRay, RayHit, OutColor, (Math::FRay&)OutRay)) {
 		OutRay.Time = InRay.Time;
@@ -16,14 +20,15 @@ bool MaterialBase::ScatterWithTime(const Math::FRayWithTime& InRay, const Math::
 	return false;	
 }
 
-LambertMaterial::LambertMaterial(const Math::FVector4& InAlbedo) {
-	Texture.Reset(new SolidColor(Math::Color8{ InAlbedo }));
+Math::FVector4 MaterialBase::Emitted(const Math::FRayHit& RayHit) const {
+	return { 0.0f, 0.0f, 0.0f, 0.0f };
+}
+
+LambertMaterial::LambertMaterial(Math::Color8 InAlbedo) {
+	Texture.Reset(new SolidColor(InAlbedo));
 }
 
 LambertMaterial::LambertMaterial(TexturePtr&& InTexture): Texture(MoveTemp(InTexture)) {
-}
-
-LambertMaterial::LambertMaterial(const Math::FVector3& InAlbedo) : LambertMaterial(Math::FVector4{InAlbedo, 1.0f}) {
 }
 
 bool LambertMaterial::Scatter(const Math::FRay& InRay, const Math::FRayHit& RayHit, Math::FVector4& OutColor, Math::FRay& OutRay) const {
@@ -72,4 +77,14 @@ bool DielectricMaterial::Scatter(const Math::FRay& InRay, const Math::FRayHit& R
 	}
 	OutRay = { RayHit.Position, outDirection };
 	return true;
+}
+
+DiffuseLightMaterial::DiffuseLightMaterial(TexturePtr&& InTexture, float InScale) : Texture(MoveTemp(InTexture)), Scale(InScale){
+}
+
+DiffuseLightMaterial::DiffuseLightMaterial(Math::Color8 InColor, float InScale):Texture(new SolidColor(InColor)),Scale(InScale){
+}
+
+Math::FVector4 DiffuseLightMaterial::Emitted(const Math::FRayHit& RayHit) const {
+	return Scale * Texture->SampleVector4(RayHit.Texcoord, RayHit.Position);
 }

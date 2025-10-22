@@ -15,6 +15,8 @@ public:
 	virtual Math::FAABB3 GetAABB() const = 0;
 };
 
+typedef TUniquePtr<RayTracingObjectBase> RTObjectPtr;
+
 class RTSphere: public RayTracingObjectBase {
 public:
 	RTSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial);

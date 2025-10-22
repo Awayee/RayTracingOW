@@ -31,11 +31,13 @@ void RayTracingCamera::SetFov(float fov) {
 	Fov = fov;
 }
 
-void RayTracingCamera::SetFocus(float focusDistance, float defocusAngle) {
-	FocusDistance = focusDistance;
-	DefocusAngle = defocusAngle;
+void RayTracingCamera::SetFocusDistance(float InDistance) {
+	FocusDistance = InDistance;
 }
 
+void RayTracingCamera::SetDefocusAngle(float InAngle) {
+	DefocusAngle = InAngle;
+}
 Math::USize RayTracingCamera::GetRenderSize() const {
 	return RenderSize;
 }

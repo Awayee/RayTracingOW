@@ -31,6 +31,14 @@ Math::FAABB3 RTVirtualNode::GetAABB() const {
 	return AABB;
 }
 
+RayTracingScene::RayTracingScene() {
+	Background.Reset(new SolidColor(Math::Color8{0.7f, 0.8f, 1.0f, 1.0f}));
+}
+
+void RayTracingScene::SetBackground(TexturePtr&& Texture) {
+	Background = MoveTemp(Texture);
+}
+
 void RayTracingScene::AddSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial) {
 	Objects.emplace_back(new RTSphere(InSphere, MoveTemp(InMaterial)));
 }
@@ -73,12 +81,15 @@ bool RayTracingScene::TestRayWithTime(const Math::FRayWithTime& InRay, float Dis
 }
 
 Math::FVector4 RayTracingScene::RayFallback(const Math::FRay& InRay) {
-	// Return sky color
-	const float Alpha = InRay.Direction.Normalize().Y * 0.5f + 0.5f;
-	static const Math::FVector3 Color0{ 1.0f, 1.0f, 1.0f };
-	static const Math::FVector3 Color1{ 0.5f, 0.7f, 1.0f };
-	const Math::FVector3 Color = Alpha * Color1 + (1.0f - Alpha) * Color0;
-	return Math::FVector4{ Color, 1.0f };
+	//// Return sky color
+	//const float Alpha = InRay.Direction.Normalize().Y * 0.5f + 0.5f;
+	//static const Math::FVector3 Color0{ 1.0f, 1.0f, 1.0f };
+	//static const Math::FVector3 Color1{ 0.5f, 0.7f, 1.0f };
+	//const Math::FVector3 Color = Alpha * Color1 + (1.0f - Alpha) * Color0;
+	//return Math::FVector4{ Color, 1.0f };
+	const Math::FVector3 Dir = InRay.Direction.Normalize();
+	const Math::FVector2 UV {Dir.X * 0.5f + 0.5f, Dir.Y * 0.5f + 0.5f};
+	return Background->SampleVector4(UV, InRay.Origin);
 }
 
 RayTracingScene::BVHNode::BVHNode() :

@@ -22,6 +22,8 @@ namespace Math {
 		float Distance;
 		bool FrontFace;
 		FRayHit();
+		FRayHit(const FRayHit&)=default;
+		FRayHit& operator=(const FRayHit&)=default;
 	};
 
 	struct FSphere {
