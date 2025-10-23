@@ -1,5 +1,7 @@
 #pragma once
 #include "Vector.h"
+#include "Transform.h"
+
 namespace Math {
 	struct FRay {
 		FVector3 Origin;
@@ -45,6 +47,8 @@ namespace Math {
 		bool IsValid() const;
 		int GetMaxAxis() const;
 		void Union(const FAABB3& Other);
+		FAABB3 Translate(const Math::FVector3& Translation)const;
+		FAABB3 Rotate(const Math::FMatrix3x3& Rotation) const;
 		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax) const;
 	};
 

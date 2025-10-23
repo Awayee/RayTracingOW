@@ -10,7 +10,7 @@ struct RayHitSurface {
 class RayTracingObjectBase {
 public:
 	virtual ~RayTracingObjectBase();
-	virtual bool TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const = 0;
+	virtual bool TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const;// TODO discard
 	virtual bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const;
 	virtual Math::FAABB3 GetAABB() const = 0;
 };
@@ -47,4 +47,15 @@ private:
 	Math::FVector3 MoveTarget;
 	Math::FVector3 MoveDir;
 	float MoveDistance;
+};
+
+class RTBox: public RayTracingObjectBase {
+public:
+	RTBox(const Math::FVector3& A, const Math::FVector3& B, MaterialPtr&& InMaterial);
+	virtual bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
+	virtual Math::FAABB3 GetAABB() const override;
+private:
+	TUniquePtr<RTQuad> Quads[6];
+	Math::FAABB3 AABB;
+	MaterialPtr Material;
 };

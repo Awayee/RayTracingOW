@@ -109,6 +109,24 @@ namespace Math {
 		}
 	}
 
+	FAABB3 FAABB3::Translate(const Math::FVector3& Translation) const {
+		return FAABB3{Min+Translation, Max+Translation};
+	}
+
+	FAABB3 FAABB3::Rotate(const Math::FMatrix3x3& Rotation) const {
+		Math::FVector3 TempMin{FLOAT_MAX}, TempMax{-FLOAT_MAX};
+		for(uint32 i=0; i<8; ++i) {
+			Math::FVector3 Point{
+				(i & (1<<2)) ? Max.X: Min.X,
+				(i & (1<<1)) ? Max.Y: Min.Y,
+				(i & 1 ) ? Max.Z : Min.Z};
+			Point = Rotation * Point;
+			TempMin = Math::FVector3::Min(TempMin, Point);
+			TempMax = Math::FVector3::Max(TempMax, Point);
+		}
+		return Math::FAABB3{TempMin, TempMax};
+	}
+
 	bool FAABB3::TestRay(const FRay& InRay, float DistanceMin, float DistanceMax) const{
 		// Reference: https://raytracing.github.io/books/RayTracingTheNextWeek.html#boundingvolumehierarchies/hierarchiesofboundingvolumes
 		for(int Axis=0; Axis<3; ++Axis) {

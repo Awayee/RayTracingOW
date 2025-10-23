@@ -1,4 +1,5 @@
 #include "RayTracing/RayTracingApp.h"
+#include "RayTracingTransform.h"
 #include "RayTracing/RayTracingScene.h"
 #include "RayTracing/RayTracingCamera.h"
 #include "RayTracing/RayTracingRenderer.h"
@@ -53,6 +54,21 @@ inline void AddBox(RayTracingScene* Scene, const Math::FVector3& A, const Math::
 	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Min.Y, Min.Z}, DZ, DY }, SolidColorMaterial(Color)))); // left
 	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Max.Y, Max.Z}, DX,-DZ }, SolidColorMaterial(Color)))); // top
 	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Min.Y, Min.Z}, DX, DZ }, SolidColorMaterial(Color)))); // bottom
+}
+
+template<class T, class ...Args>
+void AddTranslated(RayTracingScene* Scene, const Math::FVector3& Translation, Args...InArgs) {
+	Scene->AddObject(RTObjectPtr(new RTTranslated(RTObjectPtr(new T(MoveTemp(InArgs)...)), Translation)));
+}
+
+template<class T, class ...Args>
+void AddRotatedY(RayTracingScene* Scene, float RotationY, Args...InArgs) {
+	Scene->AddObject(RTObjectPtr(new RTRotatedY(RTObjectPtr(new T(MoveTemp(InArgs)...)), RotationY)));
+}
+
+template<class T, class...Args>
+void AddTransformed(RayTracingScene* Scene, const Math::FVector3& Translation, float RotationY, Args...InArgs) {
+	Scene->AddObject(RTObjectPtr(new RTTranslated(RTObjectPtr(new RTRotatedY(RTObjectPtr(new T(MoveTemp(InArgs)...)), RotationY)), Translation)));
 }
 #pragma endregion
 
@@ -180,8 +196,12 @@ static void InitializeCornellBox(RayTracingCamera* Camera, RayTracingScene* Scen
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 555}, {555, 0, 0}, {0, 555, 0}}, SolidColorMaterial(White))));
 	Scene->SetBackground(TexturePtr(new SolidColor({ 0.0f, 0.0f, 0.0f, 1.0f })));
 
-	AddBox(Scene, {130, 0, 65}, {295, 165, 230}, White);
-	AddBox(Scene, {265, 0, 295}, {430, 330, 460}, White);
+	//AddBox(Scene, {130, 0, 65}, {295, 165, 230}, White);
+	//AddBox(Scene, {265, 0, 295}, {430, 330, 460}, White);
+	//Scene->AddObject(RTObjectPtr(new RTBox({ 130, 0, 65 }, { 295, 165, 230 }, SolidColorMaterial(White))));
+	//Scene->AddObject(RTObjectPtr(new RTBox({ 265, 0, 295 }, { 430, 330, 460 }, SolidColorMaterial(White))));
+	AddTransformed<RTBox>(Scene, { 265,0,295 }, 15 * Math::Deg2Rad, Math::FVector3{0,0,0}, Math::FVector3{ 165,330,165 }, SolidColorMaterial(White));
+	AddTransformed<RTBox>(Scene, { 130,0,65 }, -30 * Math::Deg2Rad, Math::FVector3{ 0,0,0 }, Math::FVector3{ 165,165,165 }, SolidColorMaterial(White));
 
 	Camera->SetFov(40.0f * Math::Deg2Rad);
 	Camera->SetView({278, 278, -800}, {278, 278, 0}, {0, 1, 0});
