@@ -66,34 +66,19 @@ bool RTMovableSphere::TestRayWithTime(const Math::FRayWithTime& InRay, float Dis
 	return false;
 }
 
-RTBox::RTBox(const Math::FVector3& A, const Math::FVector3& B, MaterialPtr&& InMaterial): Material(MoveTemp(InMaterial)) {
+RTBox::RTBox(const Math::FVector3& A, const Math::FVector3& B, MaterialPtr&& InMaterial): Box(A, B), Material(MoveTemp(InMaterial)){
 	// Construct the two opposite vertices with the minimum and maximum coordinates.
 	Math::FVector3 Min = Math::FVector3::Min(A, B);
 	Math::FVector3 Max = Math::FVector3::Max(A, B);
-
-	Math::FVector3 DX = Math::FVector3{ Max.X - Min.X, 0.0f, 0.0f };
-	Math::FVector3 DY = Math::FVector3{ 0.0f, Max.Y - Min.Y, 0.0f };
-	Math::FVector3 DZ = Math::FVector3{ 0.0f, 0.0f, Max.Z - Min.Z };
-
-	Quads[0].Reset(new RTQuad({ {Min.X, Min.Y, Max.Z}, DX, DY }, {})); // front
-	Quads[1].Reset(new RTQuad({ {Max.X, Min.Y, Max.Z},-DZ, DY }, {})); // right
-	Quads[2].Reset(new RTQuad({ {Max.X, Min.Y, Min.Z},-DX, DY }, {})); // back
-	Quads[3].Reset(new RTQuad({ {Min.X, Min.Y, Min.Z}, DZ, DY }, {})); // left
-	Quads[4].Reset(new RTQuad({ {Min.X, Max.Y, Max.Z}, DX,-DZ }, {})); // top
-	Quads[5].Reset(new RTQuad({ {Min.X, Min.Y, Min.Z}, DX, DZ }, {})); // bottom
 	AABB = Math::FAABB3{Min, Max};
 }
 
 bool RTBox::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
-	bool bHit = false;
-	for(const auto& Quad: Quads) {
-		if(Quad->TestRayWithTime(InRay, DistanceMin, DistanceMax, OutHitSurface)) {
-			bHit = true;
-			DistanceMax = OutHitSurface.Geometry.Distance;
-			OutHitSurface.Material = Material.Get();
-		}
+	if(Box.TestRay(InRay, DistanceMin, DistanceMax, OutHitSurface.Geometry)) {
+		OutHitSurface.Material = Material.Get();
+		return true;
 	}
-	return bHit;
+	return false;
 }
 
 Math::FAABB3 RTBox::GetAABB() const {

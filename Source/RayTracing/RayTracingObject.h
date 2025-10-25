@@ -55,7 +55,7 @@ public:
 	virtual bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
 	virtual Math::FAABB3 GetAABB() const override;
 private:
-	TUniquePtr<RTQuad> Quads[6];
+	Math::FBox Box;
 	Math::FAABB3 AABB;
 	MaterialPtr Material;
 };

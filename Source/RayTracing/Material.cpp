@@ -88,3 +88,12 @@ DiffuseLightMaterial::DiffuseLightMaterial(Math::Color8 InColor, float InScale):
 Math::FVector4 DiffuseLightMaterial::Emitted(const Math::FRayHit& RayHit) const {
 	return Scale * Texture->SampleVector4(RayHit.Texcoord, RayHit.Position);
 }
+
+IsotropicMaterial::IsotropicMaterial(TexturePtr&& InTexture) : Texture(MoveTemp(InTexture)){
+}
+
+bool IsotropicMaterial::Scatter(const Math::FRay& Ray, const Math::FRayHit& RayHit, Math::FVector4& OutColor, Math::FRay& OutRay) const {
+	OutRay=Math::FRay(RayHit.Position, Math::RandomUintVector());
+	OutColor = Texture->SampleVector4(RayHit.Texcoord, RayHit.Position);
+	return true;
+}

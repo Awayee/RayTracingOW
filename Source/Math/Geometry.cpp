@@ -220,4 +220,29 @@ namespace Math {
 		}
 		return Math::FAABB3{Min, Max};
 	}
+
+	FBox::FBox(const FVector3& A, const FVector3& B) {
+		Math::FVector3 Min = Math::FVector3::Min(A, B);
+		Math::FVector3 Max = Math::FVector3::Max(A, B);
+		Math::FVector3 DX = Math::FVector3{ Max.X - Min.X, 0.0f, 0.0f };
+		Math::FVector3 DY = Math::FVector3{ 0.0f, Max.Y - Min.Y, 0.0f };
+		Math::FVector3 DZ = Math::FVector3{ 0.0f, 0.0f, Max.Z - Min.Z };
+		Quads[0]={ {Min.X, Min.Y, Max.Z}, DX, DY }; // front
+		Quads[1]={ {Max.X, Min.Y, Max.Z},-DZ, DY }; // right
+		Quads[2]={ {Max.X, Min.Y, Min.Z},-DX, DY }; // back
+		Quads[3]={ {Min.X, Min.Y, Min.Z}, DZ, DY }; // left
+		Quads[4]={ {Min.X, Max.Y, Max.Z}, DX,-DZ }; // top
+		Quads[5]={ {Min.X, Min.Y, Min.Z}, DX, DZ }; // bottom
+	}
+
+	bool FBox::TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const {
+		bool bHit = false;
+		for (const auto& Quad : Quads) {
+			if (Quad.TestRay(InRay, DistanceMin, DistanceMax, OutHit)) {
+				bHit = true;
+				DistanceMax = OutHit.Distance;
+			}
+		}
+		return bHit;
+	}
 }

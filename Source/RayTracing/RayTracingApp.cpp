@@ -1,8 +1,9 @@
 #include "RayTracing/RayTracingApp.h"
-#include "RayTracingTransform.h"
 #include "RayTracing/RayTracingScene.h"
 #include "RayTracing/RayTracingCamera.h"
 #include "RayTracing/RayTracingRenderer.h"
+#include "RayTracing/RayTracingTransform.h"
+#include "RayTracing/RayTracingConstantMedium.h"
 #include "Core/Log.h"
 #include "Core/Timer.h"
 #include "Math/Vector.h"
@@ -31,12 +32,28 @@ static constexpr float RENDER_SCALE =
 
 #pragma region Utils
 
-inline MaterialPtr SolidColorMaterial(Math::Color8 Color) {
+inline MaterialPtr SolidColorLambertian(Math::Color8 Color) {
 	return MaterialPtr(new LambertMaterial(TexturePtr(new SolidColor(Color))));
+}
+
+inline MaterialPtr SolidColorMetal(const Math::FVector4& Color, float Fuzz) {
+	return MaterialPtr(new MetalMaterial(Color, Fuzz));
 }
 
 inline MaterialPtr EmissiveMaterial(Math::Color8 Color, float Scale) {
 	return MaterialPtr(new DiffuseLightMaterial(Color, Scale));
+}
+
+inline MaterialPtr ImageLambertian(const char* File) {
+	return MaterialPtr(new LambertMaterial(TexturePtr(new ImageTexture(File))));
+}
+
+inline MaterialPtr NoiseLambertian(float Scale) {
+	return MaterialPtr(new LambertMaterial(TexturePtr(new NoiseTexture(Scale))));
+}
+
+inline RTObjectPtr MakeGlassSphere(const Math::FVector3& Center, float Radius, float RefractionIndex) {
+	return RTObjectPtr(new RTSphere({Center, Radius}, MaterialPtr(new DielectricMaterial(RefractionIndex))));
 }
 
 inline void AddBox(RayTracingScene* Scene, const Math::FVector3& A, const Math::FVector3& B, Math::Color8 Color) {
@@ -48,12 +65,12 @@ inline void AddBox(RayTracingScene* Scene, const Math::FVector3& A, const Math::
 	Math::FVector3 DY = Math::FVector3{ 0.0f, Max.Y - Min.Y, 0.0f };
 	Math::FVector3 DZ = Math::FVector3{ 0.0f, 0.0f, Max.Z - Min.Z };
 
-	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Min.Y, Max.Z}, DX, DY }, SolidColorMaterial(Color)))); // front
-	Scene->AddObject(RTObjectPtr(new RTQuad({ {Max.X, Min.Y, Max.Z},-DZ, DY }, SolidColorMaterial(Color)))); // right
-	Scene->AddObject(RTObjectPtr(new RTQuad({ {Max.X, Min.Y, Min.Z},-DX, DY }, SolidColorMaterial(Color)))); // back
-	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Min.Y, Min.Z}, DZ, DY }, SolidColorMaterial(Color)))); // left
-	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Max.Y, Max.Z}, DX,-DZ }, SolidColorMaterial(Color)))); // top
-	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Min.Y, Min.Z}, DX, DZ }, SolidColorMaterial(Color)))); // bottom
+	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Min.Y, Max.Z}, DX, DY }, SolidColorLambertian(Color)))); // front
+	Scene->AddObject(RTObjectPtr(new RTQuad({ {Max.X, Min.Y, Max.Z},-DZ, DY }, SolidColorLambertian(Color)))); // right
+	Scene->AddObject(RTObjectPtr(new RTQuad({ {Max.X, Min.Y, Min.Z},-DX, DY }, SolidColorLambertian(Color)))); // back
+	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Min.Y, Min.Z}, DZ, DY }, SolidColorLambertian(Color)))); // left
+	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Max.Y, Max.Z}, DX,-DZ }, SolidColorLambertian(Color)))); // top
+	Scene->AddObject(RTObjectPtr(new RTQuad({ {Min.X, Min.Y, Min.Z}, DX, DZ }, SolidColorLambertian(Color)))); // bottom
 }
 
 template<class T, class ...Args>
@@ -67,9 +84,10 @@ void AddRotatedY(RayTracingScene* Scene, float RotationY, Args...InArgs) {
 }
 
 template<class T, class...Args>
-void AddTransformed(RayTracingScene* Scene, const Math::FVector3& Translation, float RotationY, Args...InArgs) {
-	Scene->AddObject(RTObjectPtr(new RTTranslated(RTObjectPtr(new RTRotatedY(RTObjectPtr(new T(MoveTemp(InArgs)...)), RotationY)), Translation)));
+RTObjectPtr TransformedObject(const Math::FVector3& Translation, float RotationY, Args...InArgs) {
+	return RTObjectPtr(new RTTranslated(RTObjectPtr(new RTRotatedY(RTObjectPtr(new T(MoveTemp(InArgs)...)), RotationY)), Translation));
 }
+
 #pragma endregion
 
 
@@ -188,23 +206,98 @@ static void InitializeCornellBox(RayTracingCamera* Camera, RayTracingScene* Scen
 	const Math::Color8 LightColor{1.0f, 1.0f, 1.0f, 1.0f};
 	const float LightScale = 15.0f;
 
-	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{555, 0, 0}, {0, 555, 0}, {0, 0, 555}}, SolidColorMaterial(Green))));
-	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 0}, {0, 555, 0}, {0, 0, 555}}, SolidColorMaterial(Red))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{555, 0, 0}, {0, 555, 0}, {0, 0, 555}}, SolidColorLambertian(Green))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 0}, {0, 555, 0}, {0, 0, 555}}, SolidColorLambertian(Red))));
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{343, 554, 332}, {-130, 0, 0}, {0, 0, -105} }, EmissiveMaterial(LightColor, LightScale))));
-	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 0}, {555, 0, 0}, {0, 0, 555}}, SolidColorMaterial(White))));
-	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{555, 555, 555}, {-555, 0, 0}, {0, 0, -555}}, SolidColorMaterial(White))));
-	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 555}, {555, 0, 0}, {0, 555, 0}}, SolidColorMaterial(White))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 0}, {555, 0, 0}, {0, 0, 555}}, SolidColorLambertian(White))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{555, 555, 555}, {-555, 0, 0}, {0, 0, -555}}, SolidColorLambertian(White))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 555}, {555, 0, 0}, {0, 555, 0}}, SolidColorLambertian(White))));
 	Scene->SetBackground(TexturePtr(new SolidColor({ 0.0f, 0.0f, 0.0f, 1.0f })));
 
 	//AddBox(Scene, {130, 0, 65}, {295, 165, 230}, White);
 	//AddBox(Scene, {265, 0, 295}, {430, 330, 460}, White);
-	//Scene->AddObject(RTObjectPtr(new RTBox({ 130, 0, 65 }, { 295, 165, 230 }, SolidColorMaterial(White))));
-	//Scene->AddObject(RTObjectPtr(new RTBox({ 265, 0, 295 }, { 430, 330, 460 }, SolidColorMaterial(White))));
-	AddTransformed<RTBox>(Scene, { 265,0,295 }, 15 * Math::Deg2Rad, Math::FVector3{0,0,0}, Math::FVector3{ 165,330,165 }, SolidColorMaterial(White));
-	AddTransformed<RTBox>(Scene, { 130,0,65 }, -30 * Math::Deg2Rad, Math::FVector3{ 0,0,0 }, Math::FVector3{ 165,165,165 }, SolidColorMaterial(White));
+	//Scene->AddObject(RTObjectPtr(new RTBox({ 130, 0, 65 }, { 295, 165, 230 }, SolidColorLambertian(White))));
+	//Scene->AddObject(RTObjectPtr(new RTBox({ 265, 0, 295 }, { 430, 330, 460 }, SolidColorLambertian(White))));
+	Scene->AddObject(TransformedObject<RTBox>({ 265,0,295 }, 15 * Math::Deg2Rad, Math::FVector3{0,0,0}, Math::FVector3{ 165,330,165 }, SolidColorLambertian(White)));
+	Scene->AddObject(TransformedObject<RTBox>({ 130,0,65 }, -30 * Math::Deg2Rad, Math::FVector3{ 0,0,0 }, Math::FVector3{ 165,165,165 }, SolidColorLambertian(White)));
 
 	Camera->SetFov(40.0f * Math::Deg2Rad);
 	Camera->SetView({278, 278, -800}, {278, 278, 0}, {0, 1, 0});
+	Camera->SetDefocusAngle(0.0f);
+}
+
+static void InitialzeCornellSmoke(RayTracingCamera* Camera, RayTracingScene* Scene) {
+	const Math::Color8 Red{ 0.65f, 0.05f, 0.05f, 1.0f };
+	const Math::Color8 White{ 0.73f, 0.73f, 0.73f, 1.0f };
+	const Math::Color8 Green{ 0.12f, 0.45f, 0.15f, 1.0f };
+	const Math::Color8 LightColor{ 1.0f, 1.0f, 1.0f, 1.0f };
+	const float LightScale = 15.0f;
+
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{ {555, 0, 0}, {0, 555, 0}, {0, 0, 555} }, SolidColorLambertian(Green))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{ {0, 0, 0}, {0, 555, 0}, {0, 0, 555} }, SolidColorLambertian(Red))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{ {343, 554, 332}, {-130, 0, 0}, {0, 0, -105} }, EmissiveMaterial(LightColor, LightScale))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{ {0, 0, 0}, {555, 0, 0}, {0, 0, 555} }, SolidColorLambertian(White))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{ {555, 555, 555}, {-555, 0, 0}, {0, 0, -555} }, SolidColorLambertian(White))));
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{ {0, 0, 555}, {555, 0, 0}, {0, 555, 0} }, SolidColorLambertian(White))));
+	Scene->SetBackground(TexturePtr(new SolidColor({ 0.0f, 0.0f, 0.0f, 1.0f })));
+
+	//AddBox(Scene, {130, 0, 65}, {295, 165, 230}, White);
+	//AddBox(Scene, {265, 0, 295}, {430, 330, 460}, White);
+	//Scene->AddObject(RTObjectPtr(new RTBox({ 130, 0, 65 }, { 295, 165, 230 }, SolidColorLambertian(White))));
+	//Scene->AddObject(RTObjectPtr(new RTBox({ 265, 0, 295 }, { 430, 330, 460 }, SolidColorLambertian(White))));
+	RTObjectPtr Box0 = TransformedObject<RTBox>({ 265,0,295 }, 15 * Math::Deg2Rad, Math::FVector3{ 0,0,0 }, Math::FVector3{ 165,330,165 }, SolidColorLambertian(White));
+	RTObjectPtr Box1 = TransformedObject<RTBox>({ 130,0,65 }, -30 * Math::Deg2Rad, Math::FVector3{ 0,0,0 }, Math::FVector3{ 165,165,165 }, SolidColorLambertian(White));
+	Scene->AddObject(RTObjectPtr(new RTConstantMedium(MoveTemp(Box0), 0.01f, Math::Color8{0.0f, 0.0f, 0.0f, 1.0f})));
+	Scene->AddObject(RTObjectPtr(new RTConstantMedium(MoveTemp(Box1), 0.01f, Math::Color8{1.0f, 0.0f, 1.0f, 1.0f})));
+
+	Camera->SetFov(40.0f * Math::Deg2Rad);
+	Camera->SetView({ 278, 278, -800 }, { 278, 278, 0 }, { 0, 1, 0 });
+	Camera->SetDefocusAngle(0.0f);
+}
+
+static void InitializeFinalScene(RayTracingCamera* Camera, RayTracingScene* Scene) {
+	Math::Color8 GroundColor{0.48f, 0.83f, 0.53f, 1.0f};
+	constexpr int32 BoxPerSide = 20;
+	for (int i = 0; i < BoxPerSide; i++) {
+		for (int j = 0; j < BoxPerSide; j++) {
+			float w = 100.0f;
+			float x0 = -1000.0f + (float)i * w;
+			float z0 = -1000.0f + (float)j * w;
+			float y0 = 0.0;
+			float x1 = x0 + w;
+			float y1 = Math::Random(1.0f, 101.0f);
+			float z1 = z0 + w;
+			Scene->AddObject(RTObjectPtr(new RTBox({x0, y0, z0}, {x1, y1, z1}, SolidColorLambertian(GroundColor))));
+		}
+	}
+	Math::Color8 LightColor{1.0f, 1.0f, 1.0f, 1.0f};
+	float LightDensity = 7.0f;
+
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{123, 554, 147}, {300, 0, 0}, {0, 0, 265}}, EmissiveMaterial(LightColor, LightDensity))));
+
+	Math::FVector3 Center1(400, 400, 200);
+	Math::FVector3 Center2 = Center1 + Math::FVector3{30, 0, 0};
+	Scene->AddObject(RTObjectPtr(new RTMovableSphere({ Center1,50 }, SolidColorLambertian(Math::Color8{ 0.7f, 0.3f, 0.1f, 1.0f}), Center2)));
+
+	Scene->AddObject(MakeGlassSphere({ 260.0f, 150.0f, 45.0f }, 50.0f, 1.5f));
+	Scene->AddObject(RTObjectPtr(new RTSphere({{0, 150, 145}, 50}, SolidColorMetal(Math::FVector4{0.8f, 0.8f, 0.9f, 1.0f}, 1.0f))));
+
+	Scene->AddObject(MakeGlassSphere({ 360.0f, 150.0f, 145.0f }, 70.0f, 1.5f));
+	Scene->AddObject(RTObjectPtr(new RTConstantMedium(MakeGlassSphere({ 360.0f, 150.0f, 145.0f }, 70.0f, 1.5f), 0.2f, {0.2f, 0.4f, 0.9f, 1.0f})));
+	Scene->AddObject(RTObjectPtr(new RTConstantMedium(MakeGlassSphere({ 0.0f, 0.0f, 0.0f }, 5000.0f, 1.5f), 0.0001f, { 1.0f, 1.0f, 1.0f, 1.0f })));
+
+	Scene->AddObject(RTObjectPtr(new RTSphere({{400.0f, 200.0f, 400.0f}, 100.0f}, ImageLambertian("earthmap.jpg"))));
+	Scene->AddObject(RTObjectPtr(new RTSphere({{360.0f, 150.0f,145.0f}, 70.0f}, NoiseLambertian(0.2f))));
+
+	Math::Color8 WhiteColor{0.73f, 0.73f, 0.73f, 1.0f};
+	int ns = 1000;
+	for (int j = 0; j < ns; j++) {
+		Scene->AddObject(TransformedObject<RTSphere>({-100.0f, 270.0f, 395.0f}, 15.0f, Math::FSphere{Math::RandomVector(0.0f, 165.0f), 10.0f}, SolidColorLambertian(WhiteColor)));
+	}
+
+	Scene->SetBackground(TexturePtr(new SolidColor({0.0f, 0.0f, 0.0f, 1.0f})));
+	Camera->SetFov(40.0f * Math::Deg2Rad);
+	Camera->SetView({ 478, 278, -600 }, { 278, 278, 0 }, {0, 1,0});
 	Camera->SetDefocusAngle(0.0f);
 }
 #pragma endregion
@@ -234,7 +327,7 @@ RayTracingApp::RayTracingApp() {
 	// Create ray tracing scene
 	Camera.Reset(new RayTracingCamera({ (uint32)(WINDOW_WIDTH * RENDER_SCALE), (uint32)(WINDOW_HEIGHT * RENDER_SCALE) }));
 	Scene.Reset(new RayTracingScene());
-	InitializeCornellBox(Camera.Get(), Scene.Get()); // TODO test
+	InitializeFinalScene(Camera.Get(), Scene.Get()); // TODO test
 	Camera->SetupRayData();
 	Scene->BuildHierarchy();
 

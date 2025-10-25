@@ -28,6 +28,7 @@ namespace Math {
 	template<typename T> T Pow(T x, T exp) { return (T)std::pow(x, exp); }
 	template<typename T> T Ceil(T x) { return (T)std::ceil(x); }
 	template<typename T> T Floor(T x) { return (T)std::floor(x); }
+	template<typename T> T Log(T x) {return (T)std::log(x); }
 
 	// triangle func
 	template<typename T> T Sin   (T x)  {return std::sin(x);}

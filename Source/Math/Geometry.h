@@ -55,6 +55,7 @@ namespace Math {
 	struct FPlane {
 		Math::FVector3 Normal;
 		float D;
+		FPlane()=default;
 		FPlane(const Math::FVector3& InNormal, float InD);
 		FPlane(const Math::FVector3& InQ, const Math::FVector3& InU, const Math::FVector3& InV);
 		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, Math::FRayHit& OutHit) const;
@@ -75,5 +76,13 @@ namespace Math {
 		FVector3 U;
 		FVector3 V;
 		FPlane Plane;
+	};
+
+	class FBox {
+	public:
+		FBox(const FVector3& A, const FVector3& B);
+		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const;
+	private:
+		FQuad Quads[6];
 	};
 }

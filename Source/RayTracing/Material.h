@@ -50,3 +50,11 @@ private:
 	TexturePtr Texture;
 	float Scale;
 };
+
+class IsotropicMaterial: public MaterialBase {
+public:
+	explicit IsotropicMaterial(TexturePtr&& InTexture);
+	bool Scatter(const Math::FRay& Ray, const Math::FRayHit& RayHit, Math::FVector4& OutColor, Math::FRay& OutRay) const override;
+private:
+	TexturePtr Texture;
+};
