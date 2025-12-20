@@ -25,9 +25,11 @@ private:
 		WAIT_FENCE_MAX = 10000,
 	};
 	GLFWwindow* Window;
+	bool bEnableDebug;
 	uint32 WindowWidth;
 	uint32 WindowHeight;
-	bool bEnableDebug;
+	float ContentScaleX;
+	float ContentScaleY;
 
 	VkInstance Instance;
 	VkDebugUtilsMessengerEXT DebugUtilsMessenger;
@@ -76,6 +78,7 @@ private:
 
 	void CreateGLFWWindow();
 	static void OnWindowResize(GLFWwindow* Window, int Width, int Height);
+	static void OnWindowContentResize(GLFWwindow* Window, float ScaleX, float ScaleY);
 
 	void CreateInstance();
 	void PickGPU();
@@ -89,6 +92,7 @@ private:
 	void CreateDefaultSampler();
 	void DestroySwapchain();
 	void RecreateSwapchain();
+	VkExtent2D GetWindowSizeWithScale();
 	VkCommandBuffer AllocateCommandBuffer();
 	void SubmitAndFreeCommandBufferWaitIdle(VkCommandBuffer Cmd, VkQueue Queue);
 	void SubmitAndFreeCommandBuffer(VkCommandBuffer Cmd, VkQueue Queue, VkSemaphore WaitSmp, VkSemaphore SignalSmp, VkFence Fence);

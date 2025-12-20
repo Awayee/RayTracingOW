@@ -197,6 +197,8 @@ void TransitionImageLayout(VkCommandBuffer Cmd, VkImage Image, VkImageLayout Old
 VulkanRHI::VulkanRHI(uint32 InWindowWidth, uint32 InWindowHeight):
 WindowWidth(InWindowWidth),
 WindowHeight(InWindowHeight),
+ContentScaleX(1.0f),
+ContentScaleY(1.0f),
 #if defined(_DEBUG)
 bEnableDebug(true),
 #else
@@ -335,13 +337,14 @@ bool VulkanRHI::DrawTexture(RHITextureHandle TextureHandle) {
 	VkWriteDescriptorSet Writes[] = {WriteSampler, WriteImage};
 	vkUpdateDescriptorSets(Device, 2, Writes, 0, nullptr);
 
+	VkExtent2D ScaledSize = GetWindowSizeWithScale();
 	// begin render pass
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = DefaultRenderPass;
 	renderPassInfo.framebuffer = SwapchainImages[ImageIndex].Framebuffer;
 	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = {WindowWidth, WindowHeight};
+	renderPassInfo.renderArea.extent = ScaledSize;
 	VkClearValue clearValues[] = { {}, {} };
 	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 	renderPassInfo.clearValueCount = 1;
@@ -352,9 +355,9 @@ bool VulkanRHI::DrawTexture(RHITextureHandle TextureHandle) {
 	vkCmdBindPipeline(Cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, DefaultPSO->GetPipeline());
 	vkCmdBindDescriptorSets(Cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, DefaultPSO->GetPipelineLayout(), 0, 1, &Ds, 0, nullptr);
 	// flip y
-	VkViewport Viewport{0.0f, (float)WindowHeight, (float)WindowWidth, -(float)WindowHeight, 0.0f, 1.0f};
+	VkViewport Viewport{0.0f, (float)ScaledSize.height, (float)ScaledSize.width, -(float)ScaledSize.height, 0.0f, 1.0f};
 	vkCmdSetViewport(Cmd, 0, 1, &Viewport);
-	VkRect2D Rect2D{{0, 0}, {WindowWidth, WindowHeight}};
+	VkRect2D Rect2D{{0, 0}, ScaledSize};
 	vkCmdSetScissor(Cmd, 0, 1, &Rect2D);
 	vkCmdDraw(Cmd, 6, 1, 0, 0);
 	vkCmdEndRenderPass(Cmd);
@@ -397,8 +400,8 @@ bool VulkanRHI::DrawTexture(RHITextureHandle TextureHandle) {
 void VulkanRHI::CreateGLFWWindow() {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 	glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 	Window = glfwCreateWindow((int)WindowWidth, (int)WindowHeight, PROJECT_NAME, nullptr, nullptr);
 
@@ -407,10 +410,12 @@ void VulkanRHI::CreateGLFWWindow() {
 	glfwGetWindowSize(Window, &NewWidth, &NewHeight);
 	WindowWidth = (uint32)NewWidth;
 	WindowHeight = (uint32)NewHeight;
+	glfwGetWindowContentScale(Window, &ContentScaleX, &ContentScaleY);
 
 	glfwMakeContextCurrent(Window);
 	glfwSetWindowUserPointer(Window, (void*)this);
 	glfwSetWindowSizeCallback(Window, OnWindowResize);
+	glfwSetWindowContentScaleCallback(Window, OnWindowContentResize);
 }
 
 void VulkanRHI::OnWindowResize(GLFWwindow* Window, int Width, int Height) {
@@ -420,8 +425,16 @@ void VulkanRHI::OnWindowResize(GLFWwindow* Window, int Width, int Height) {
 	RHI->RecreateSwapchain();
 }
 
-void VulkanRHI::CreateInstance() {
-	Instance = VK_NULL_HANDLE;
+void VulkanRHI::OnWindowContentResize(GLFWwindow *Window, float ScaleX, float ScaleY) {
+	VulkanRHI* RHI = (VulkanRHI*)glfwGetWindowUserPointer(Window);
+	RHI->ContentScaleX = ScaleX;
+	RHI->ContentScaleY = ScaleY;
+	RHI->RecreateSwapchain();
+}
+
+void VulkanRHI::CreateInstance()
+{
+    Instance = VK_NULL_HANDLE;
 	uint32 supportedVersion;
 	vkEnumerateInstanceVersion(&supportedVersion);
 	LOG_INFO("Supported Vulkan API version: %i.%i.%i", VK_API_VERSION_MAJOR(supportedVersion), VK_API_VERSION_MINOR(supportedVersion), VK_API_VERSION_PATCH(supportedVersion));
@@ -629,7 +642,7 @@ void VulkanRHI::CreateDevice() {
 void VulkanRHI::CreateSwapchain() {
 	// Create surface
 	VK_ASSERT(glfwCreateWindowSurface(Instance, Window, nullptr, &Surface), "vk create window surface");
-
+	
 	// Find present queue
 	auto FindPresentQueue=[this]() -> const VulkanQueue*{
 		VkBool32 isSupport = VK_FALSE;
@@ -651,6 +664,8 @@ void VulkanRHI::CreateSwapchain() {
 	if (WindowWidth == 0 || WindowHeight == 0) {
 		return;
 	}
+	
+	VkExtent2D ScaledSize = GetWindowSizeWithScale();
 	//  get capabilities
 	VkSurfaceCapabilitiesKHR capabilities{};
 	VK_ASSERT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(PhysicalDevice, Surface, &capabilities), "vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
@@ -658,7 +673,7 @@ void VulkanRHI::CreateSwapchain() {
 	VkSurfaceFormatKHR surfaceFormat{};
 	VkPresentModeKHR presentMode{ VK_PRESENT_MODE_FIFO_KHR };
 	uint32 imageCount;
-	VkExtent2D swapchainExtent = GetSwapchainExtent(capabilities, WindowWidth, WindowHeight);
+	VkExtent2D swapchainExtent = GetSwapchainExtent(capabilities, ScaledSize.width, ScaledSize.height);
 	imageCount = capabilities.minImageCount + 1;
 	if (0 != capabilities.maxImageCount && imageCount > capabilities.maxImageCount) {
 		imageCount = capabilities.maxImageCount;
@@ -773,6 +788,7 @@ void VulkanRHI::CreateRenderPass() {
 	renderPassInfo.pDependencies = &dependency;
 	VK_ASSERT(vkCreateRenderPass(Device, &renderPassInfo, nullptr, &DefaultRenderPass), "Failed to create render pass!");
 
+	VkExtent2D ScaledSize = GetWindowSizeWithScale();
 	// Create framebuffers
 	for(uint32 i=0; i<SwapchainImages.size(); ++i) {
 		VkFramebufferCreateInfo framebufferInfo{};
@@ -780,8 +796,8 @@ void VulkanRHI::CreateRenderPass() {
 		framebufferInfo.renderPass = DefaultRenderPass;
 		framebufferInfo.attachmentCount = 1;
 		framebufferInfo.pAttachments = &SwapchainImages[i].View;
-		framebufferInfo.width = WindowWidth;
-		framebufferInfo.height = WindowHeight;
+		framebufferInfo.width = ScaledSize.width;
+		framebufferInfo.height = ScaledSize.height;
 		framebufferInfo.layers = 1;
 		VK_CHECK(vkCreateFramebuffer(Device, &framebufferInfo, nullptr, &SwapchainImages[i].Framebuffer));
 	}
@@ -874,6 +890,13 @@ void VulkanRHI::RecreateSwapchain() {
 	CreateSwapchain();
 	CreateRenderPass();
 	DefaultPSO.Reset(new VulkanPSO(Device, "TextureMap.hlsl", {DescriptorSetLayout}, DefaultRenderPass));
+}
+
+VkExtent2D VulkanRHI::GetWindowSizeWithScale() {
+    return VkExtent2D{
+		(uint32)((float)WindowWidth * ContentScaleX),
+		(uint32)((float)WindowHeight * ContentScaleY)
+	};
 }
 
 VkCommandBuffer VulkanRHI::AllocateCommandBuffer() {
