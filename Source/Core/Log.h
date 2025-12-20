@@ -26,5 +26,4 @@
 
 #define LOG_WARNING(...) printf(__VA_ARGS__); std::cout << std::endl
 
-#define LOG_ERROR(...)\
-	printf(__VA_ARGS__); std::cout << std::endl; ASSERT(0, "")
+#define LOG_ERROR(...) printf(__VA_ARGS__); std::cout << std::endl; CHECK(0)

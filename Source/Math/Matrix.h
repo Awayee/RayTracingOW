@@ -213,9 +213,17 @@ namespace Math {
     // matrix 3x3
     template<typename T> Matrix3x3<T>::Matrix3x3(T** arr)
     {
+#ifdef _WIN32
         memcpy(Mat[0], arr[0], 3 * sizeof(T));
         memcpy(Mat[1], arr[1], 3 * sizeof(T));
         memcpy(Mat[2], arr[2], 3 * sizeof(T));
+#else
+        for(int i=0; i<3; ++i){
+            for(int j=0; j<3; ++j){
+                Mat[i][j] = arr[i][j];
+            }
+        }
+#endif
     }
     template<typename T> Matrix3x3<T>::Matrix3x3(T* arr)
     {

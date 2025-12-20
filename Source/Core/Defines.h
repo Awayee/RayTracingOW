@@ -12,21 +12,48 @@ typedef unsigned long long	uint64;
 
 
 // These macros must exactly match those in the Windows SDK's intsafe.h.
+#ifndef INT8_MIN
 #define INT8_MIN         (-127i8 - 1)
+#endif
+#ifndef INT16_MIN
 #define INT16_MIN        (-32767i16 - 1)
+#endif
+#ifndef INT32_MIN
 #define INT32_MIN        (-2147483647i32 - 1)
+#endif
+#ifndef INT64_MIN
 #define INT64_MIN        (-9223372036854775807i64 - 1)
+#endif
+#ifndef INT8_MAX
 #define INT8_MAX         127i8
+#endif
+#ifndef INT16_MAX
 #define INT16_MAX        32767i16
+#endif
+#ifndef INT32_MAX
 #define INT32_MAX        2147483647i32
+#endif
+#ifndef INT64_MAX
 #define INT64_MAX        9223372036854775807i64
+#endif
+#ifndef UINT8_MAX
 #define UINT8_MAX        0xffui8
+#endif
+#ifndef UINT16_MAX
 #define UINT16_MAX       0xffffui16
-#define UINT32_MAX       0xffffffffui32
-#define UINT64_MAX       0xffffffffffffffffui64
-
+#endif
+#ifndef UINT32_MAX
+#define UINT32_MAX       0xffffffffu
+#endif
+#ifndef UINT64_MAX
+#define UINT64_MAX       0xffffffffffffffffull
+#endif
+#ifndef FLOAT_MAX
 #define FLOAT_MAX        3.402823466e+38f
+#endif
+#ifndef FLOAT_MIN
 #define FLOAT_MIN        (-FLOAT_MAX)
+#endif
 
 #define INVALID_INDEX_U32 UINT32_MAX
 
