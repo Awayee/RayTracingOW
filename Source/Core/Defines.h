@@ -1,14 +1,14 @@
 #pragma once
 #include <iostream>
 
-typedef char				int8;
-typedef unsigned char		uint8;
-typedef short				int16;
-typedef unsigned short		uint16;
-typedef int					int32;
-typedef unsigned int		uint32;
-typedef long long			int64;
-typedef unsigned long long	uint64;
+typedef char                int8;
+typedef unsigned char       uint8;
+typedef short               int16;
+typedef unsigned short      uint16;
+typedef int                 int32;
+typedef unsigned int        uint32;
+typedef long long           int64;
+typedef unsigned long long  uint64;
 
 
 // These macros must exactly match those in the Windows SDK's intsafe.h.
@@ -63,19 +63,19 @@ typedef unsigned long long	uint64;
 
 
 #define NON_COPYABLE(cls)\
-	cls(const cls&) = delete;\
-	cls& operator=(const cls&) = delete
+    cls(const cls&) = delete;\
+    cls& operator=(const cls&) = delete
 
 #define NON_MOVEABLE(cls)\
-	cls(cls&&) noexcept = delete; \
-	cls& operator=(cls&&)noexcept = delete
+    cls(cls&&) noexcept = delete; \
+    cls& operator=(cls&&)noexcept = delete
 
 #define SINGLETON_INSTANCE(cls)\
 public:\
-	static void Release(){ if(s_Instance) delete s_Instance; }\
-	template <class ...Args> static void Initialize(Args...args) { Release(); s_Instance = new cls(args...); }\
-	static cls* Instance() {return s_Instance; }\
+    static void Release(){ if(s_Instance) delete s_Instance; }\
+    template <class ...Args> static void Initialize(Args...args) { Release(); s_Instance = new cls(args...); }\
+    static cls* Instance() {return s_Instance; }\
 private:\
-	NON_COPYABLE(cls);\
-	NON_MOVEABLE(cls);\
-	inline static cls* s_Instance {nullptr}
+    NON_COPYABLE(cls);\
+    NON_MOVEABLE(cls);\
+    inline static cls* s_Instance {nullptr}
