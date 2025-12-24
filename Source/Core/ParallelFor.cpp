@@ -6,7 +6,10 @@ void ParallelFor(uint64 Num, uint64 NumLoops, std::function<void(uint64)>&& Func
 }
 #elif defined(_OPENMP)
 void ParallelFor(uint64 Num, uint64 NumLoops, std::function<void(uint64)>&& Func){
-    Concurrency::parallel_for(Num, NumLoops, Func);
+#pragma omp parallel for
+    for(uint64 i=Num; i<NumLoops; ++i){
+        Func(i);
+    }
 }
 #else
 #include <thread>
