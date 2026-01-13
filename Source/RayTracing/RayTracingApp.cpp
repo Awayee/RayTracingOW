@@ -327,7 +327,8 @@ RayTracingApp::RayTracingApp() {
 	// Create ray tracing scene
 	Camera.Reset(new RayTracingCamera({ (uint32)(WINDOW_WIDTH * RENDER_SCALE), (uint32)(WINDOW_HEIGHT * RENDER_SCALE) }));
 	Scene.Reset(new RayTracingScene());
-	InitializeFinalScene(Camera.Get(), Scene.Get()); // TODO test
+	// InitializeFinalScene(Camera.Get(), Scene.Get()); // TODO test
+	InitializeCornellBox(Camera.Get(), Scene.Get());
 	Camera->SetupRayData();
 	Scene->BuildHierarchy();
 

@@ -15,6 +15,8 @@ file(GLOB COMMON_FILES
  "${SOURCE_PATH}/Resource/*.cpp"
  "${SOURCE_PATH}/RayTracing/*.h"
  "${SOURCE_PATH}/RayTracing/*.cpp"
+ "${SOURCE_PATH}/Test/*.h"
+ "${SOURCE_PATH}/Test/*.cpp"
  )
 
 if(PLATFORM_WINDOWS)

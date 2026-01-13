@@ -54,8 +54,12 @@ Math::FRay RayTracingCamera::GetRandomRay(uint32 i, uint32 j) const {
 }
 
 Math::FRayWithTime RayTracingCamera::GetRandomRayWithTime(uint32 i, uint32 j) const {
-	FVector3 offset{ Random01() - 0.5f, Random01() - 0.5f, 0.0f }; // sample square
-	FVector3 pixelSample = PixelStart + ((float)i + offset.X) * DeltaU + ((float)j + offset.Y) * DeltaV;
+	FVector3 Offset{ Random01() - 0.5f, Random01() - 0.5f, 0.0f }; // sample square
+	return GetRandomRayWithTimeOffset(i, j, Offset);
+}
+
+Math::FRayWithTime RayTracingCamera::GetRandomRayWithTimeOffset(uint32 i, uint32 j, const Math::FVector3& Offset) const {
+	FVector3 pixelSample = PixelStart + ((float)i + Offset.X) * DeltaU + ((float)j + Offset.Y) * DeltaV;
 	FVector3 rayOrigin = Eye;
 	if (DefocusAngle > 0.0f) {
 		FVector2 p = RandomInDisk();

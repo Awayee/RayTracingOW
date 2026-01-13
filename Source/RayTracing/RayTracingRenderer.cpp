@@ -12,23 +12,40 @@ Camera(InCamera), Scene(InScene), NumRaysPerPixel(InNumRaysPerPixel), RecursiveD
 
 void RayTracingRenderer::Render() {
 	LOG_INFO("Scene is Rendering...");
-	const float SampleScale = 1.0f / (float)NumRaysPerPixel;
+	const uint32 NumRaysPerPiexelSqrt = (uint32)Math::Sqrt((float)NumRaysPerPixel);
+	const float SampleScale = 1.0f / (float)(NumRaysPerPiexelSqrt * NumRaysPerPiexelSqrt);
+	const float InverseNumRaysSqrt = 1.0f / (float)NumRaysPerPiexelSqrt;
 	const Math::USize RenderSize = Camera->GetRenderSize();
 
 	// parallel rendering
 	size_t NumPixels = (size_t)(RenderSize.X * RenderSize.Y);
 	Pixels.resize(NumPixels);
-	ParallelFor(0ull, NumPixels, [this, SampleScale, RenderSize](size_t Pixel) {
+	ParallelFor(0ull, NumPixels, [this, SampleScale, RenderSize, NumRaysPerPiexelSqrt, InverseNumRaysSqrt](size_t Pixel) {
 		uint32 RenderWidth = RenderSize.X;
 		uint32 i = (uint32)Pixel % RenderWidth;
 		uint32 j = (uint32)Pixel / RenderWidth;
 		Math::FVector4 Color = Math::FVector4::ZERO;
-		for (uint32 Sample = 0; Sample < NumRaysPerPixel; ++Sample) {
-			//const Math::FRay Ray = Camera->GetRandomRay(i, j);
-			//Color += ComputeRayResult(Ray, RecursiveDepth);
-			const Math::FRayWithTime Ray = Camera->GetRandomRayWithTime(i, j);
-			Color += ComputeRayResultWithTime(Ray, RecursiveDepth);
+		for (uint32 dy=0; dy<NumRaysPerPiexelSqrt; ++dy){
+			for (uint32 dx=0; dx<NumRaysPerPiexelSqrt; ++dx){
+				// Compute square stratified
+				Math::FVector3 Offset{
+					(dx + Math::Random01()) * InverseNumRaysSqrt - 0.5f,
+					(dy + Math::Random01()) * InverseNumRaysSqrt - 0.5f,
+					0.0f
+				};
+				// Get ray by stratified
+				const Math::FRayWithTime Ray = Camera->GetRandomRayWithTimeOffset(i, j, Offset);
+				Color += ComputeRayResultWithTime(Ray, RecursiveDepth);
+			}
 		}
+		// for (uint32 Sample = 0; Sample < NumRaysPerPixel; ++Sample) {
+		// 	//const Math::FRay Ray = Camera->GetRandomRay(i, j);
+		// 	//Color += ComputeRayResult(Ray, RecursiveDepth);
+
+
+		// 	const Math::FRayWithTime Ray = Camera->GetRandomRayWithTime(i, j);
+		// 	Color += ComputeRayResultWithTime(Ray, RecursiveDepth);
+		// }
 		Color *= SampleScale;
 		const Math::Color8 ColorUNorm{Color};
 		Pixels[j * RenderWidth + i] = ColorUNorm;
