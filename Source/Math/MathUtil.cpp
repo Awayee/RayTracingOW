@@ -37,7 +37,20 @@ namespace Math {
 		return result;
 	}
 
-	FVector3 RandomOnHemisphere(const FVector3& normal) {
+    FVector3 RandomUniformOnSphere() {
+        float R1 = Random01();
+		float R2 = Random01();
+		float Phi = 2.0f * Math::PI * R1;
+		float CosTheta = 1.0f - 2.0f * R2;
+		float SinTheta = 2.0f * Math::Sqrt(R2 * (1.0f - R2));
+		return FVector3{
+			Math::Cos(Phi) * SinTheta,
+			Math::Sin(Phi) * SinTheta,
+			CosTheta,	
+		};
+    }
+
+    FVector3 RandomOnHemisphere(const FVector3& normal) {
 		// 1. random generate a point until locate in unit sphere
 		FVector3 result = RandomUintVector();
 		// 2. map the point from sphere to hemisphere
@@ -47,7 +60,19 @@ namespace Math {
 		return result;
 	}
 
-	FVector2 RandomInDisk() {
+    FVector3 RandomCosineDirection() {
+		float R1 = Random01();
+		float R2 = Random01();
+		float Phi = 2 * Math::PI * R1;
+		float SqrtR2 = Math::Sqrt(R2);
+		return FVector3{
+			Math::Cos(Phi) * SqrtR2,
+			Math::Sin(Phi) * SqrtR2,
+			Math::Sqrt(1.0f - R2)
+		};
+    }
+
+    FVector2 RandomInDisk() {
 		FVector2 result{ Random(-1.0f, 1.0f), Random(-1.0f, 1.0f) };
 		if (result.LengthSquared() > 1.0f) {
 			result.NormalizeSelf();

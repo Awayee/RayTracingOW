@@ -67,7 +67,8 @@ Math::FVector4 RayTracingRenderer::ComputeRayResult(const Math::FRay& Ray, uint3
 		if (Hit.Material) {
 			Math::FVector4 Color;
 			Math::FRay OutRay;
-			if (Hit.Material->Scatter(Ray, Hit.Geometry, Color, OutRay)) {
+			float PDFValue;
+			if (Hit.Material->Scatter(Ray, Hit.Geometry, Color, OutRay, PDFValue)) {
 				return Color * ComputeRayResult(OutRay, Depth - 1);
 			}
 		}
@@ -87,18 +88,44 @@ Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWith
 		return Scene->RayFallback(Ray);
 	}
 
+	if(!Hit.Geometry.FrontFace){
+		return Scene->RayFallback(Ray);
+	}
+
 	//const FVector3 direction = RandomOnHemisphere(hit.Normal);
 	if (!Hit.Material) {
 		// Default material color;
-		return Math::FVector4{ 1.0f, 0.0f, 1.0f, 1.0f };
+		return MaterialBase::Fallback;
 	}
 
 	const Math::FVector4 EmittedColor = Hit.Material->Emitted(Hit.Geometry);
 	Math::FVector4 Attenuation;
 	Math::FRayWithTime NewRay;
-	if (!Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Attenuation, NewRay)) {
+	float PDFValue;
+	if (!Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Attenuation, NewRay, PDFValue)) {
 		return EmittedColor;
 	}
-	const Math::FVector4 ScatteredColor = Attenuation * ComputeRayResultWithTime(NewRay, Depth - 1);
+
+	// TODO hard code light
+	Math::FVector3 OnLight = Math::FVector3{Math::Random(213.0f, 343.0f), 554.0f, Math::Random(227.0f, 332.0f)};
+	Math::FVector3 ToLight = OnLight - Hit.Geometry.Position;
+	float DistanceSq = ToLight.LengthSquared();
+	if(ToLight.Dot(Hit.Geometry.Normal) < 0.0f){
+		return EmittedColor;
+	}
+	ToLight.NormalizeSelf();
+	float LightArea = (343.0f - 213.0f) * (332.0f - 227.0f);
+	float LightCosine = Math::Abs(ToLight.Y);
+	if(LightCosine < 0.000001f){
+		return EmittedColor;
+	}
+	PDFValue = DistanceSq / (LightCosine * LightArea);
+
+	// Scattering PDF
+	float ScatteringPDF = Hit.Material->ScatteringPDF(Ray, Hit.Geometry, NewRay);
+	NewRay = Math::FRayWithTime{Hit.Geometry.Position, ToLight, Ray.Time};
+
+	Math::FVector4 ScatteredColor = Attenuation * ComputeRayResultWithTime(NewRay, Depth - 1);
+	ScatteredColor = ScatteredColor * ScatteringPDF / PDFValue;
 	return ScatteredColor + EmittedColor;
 }

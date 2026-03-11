@@ -14,7 +14,11 @@ namespace Math {
 
 	FVector3 RandomUintVector();
 
+	FVector3 RandomUniformOnSphere();
+
 	FVector3 RandomOnHemisphere(const FVector3& normal);
+
+	FVector3 RandomCosineDirection();
 
 	FVector2 RandomInDisk();
 

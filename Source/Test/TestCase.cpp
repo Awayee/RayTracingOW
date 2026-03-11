@@ -163,6 +163,27 @@ void TestPDFXPower2(){
     printf("I = %f\n", Sum / N);
 }
 
+// Test for RandomCosineDirection
+void TestForRandomCosineDirection(){
+    auto f = [](const Math::FVector3& D){
+        float CosTheta = D.Z;
+        return CosTheta * CosTheta * CosTheta;
+    };
+
+    auto pdf = [](const Math::FVector3& D){
+        return D.Z / Math::PI;
+    };
+
+    constexpr int32 N = 100000;
+    float Sum = 0.0f;
+    for(int32 i=0; i<N; ++i){
+        Math::FVector3 D = Math::RandomCosineDirection();
+        Sum += f(D) / pdf(D);
+    }
+    
+    printf("PI/2=%f, Estimate=%f\n", Math::PI / 2.0f, Sum / N);
+}
+
 TestCaseSet::TestCaseSet() {
 }
 
@@ -170,5 +191,5 @@ TestCaseSet::~TestCaseSet() {
 }
 
 void TestCaseSet::Run() {
-    TestPDFXPower2();
+    TestForRandomCosineDirection();
 }
