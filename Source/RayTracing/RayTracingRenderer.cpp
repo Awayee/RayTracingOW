@@ -1,4 +1,5 @@
 #include "RayTracing/RayTracingRenderer.h"
+#include "RayTracing/ProbabilityDistributionFunction.h"
 #include "RayTracing/RayTracingCamera.h"
 #include "RayTracing/RayTracingScene.h"
 #include "Core/Log.h"
@@ -100,32 +101,36 @@ Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWith
 
 	const Math::FVector4 EmittedColor = Hit.Material->Emitted(Hit.Geometry);
 	Math::FVector4 Attenuation;
-	Math::FRayWithTime NewRay;
+	Math::FRayWithTime Scattered;
 	float PDFValue;
-	if (!Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Attenuation, NewRay, PDFValue)) {
+	if (!Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Attenuation, Scattered, PDFValue)) {
 		return EmittedColor;
 	}
 
 	// TODO hard code light
-	Math::FVector3 OnLight = Math::FVector3{Math::Random(213.0f, 343.0f), 554.0f, Math::Random(227.0f, 332.0f)};
-	Math::FVector3 ToLight = OnLight - Hit.Geometry.Position;
-	float DistanceSq = ToLight.LengthSquared();
-	if(ToLight.Dot(Hit.Geometry.Normal) < 0.0f){
-		return EmittedColor;
-	}
-	ToLight.NormalizeSelf();
-	float LightArea = (343.0f - 213.0f) * (332.0f - 227.0f);
-	float LightCosine = Math::Abs(ToLight.Y);
-	if(LightCosine < 0.000001f){
-		return EmittedColor;
-	}
-	PDFValue = DistanceSq / (LightCosine * LightArea);
+	// Math::FVector3 OnLight = Math::FVector3{Math::Random(213.0f, 343.0f), 554.0f, Math::Random(227.0f, 332.0f)};
+	// Math::FVector3 ToLight = OnLight - Hit.Geometry.Position;
+	// float DistanceSq = ToLight.LengthSquared();
+	// if(ToLight.Dot(Hit.Geometry.Normal) < 0.0f){
+	// 	return EmittedColor;
+	// }
+	// ToLight.NormalizeSelf();
+	// float LightArea = (343.0f - 213.0f) * (332.0f - 227.0f);
+	// float LightCosine = Math::Abs(ToLight.Y);
+	// if(LightCosine < 0.000001f){
+	// 	return EmittedColor;
+	// }
+	// PDFValue = DistanceSq / (LightCosine * LightArea);
 
 	// Scattering PDF
-	float ScatteringPDF = Hit.Material->ScatteringPDF(Ray, Hit.Geometry, NewRay);
-	NewRay = Math::FRayWithTime{Hit.Geometry.Position, ToLight, Ray.Time};
+	FCosinePDF SurfacePDF{Hit.Geometry.Normal};
+	Math::FVector3 ScatteredDir = SurfacePDF.GenerateDirection();
+	Scattered = Math::FRayWithTime{Hit.Geometry.Position, ScatteredDir, Scattered.Time};
+	PDFValue = SurfacePDF.GetPDFValue(ScatteredDir);
 
-	Math::FVector4 ScatteredColor = Attenuation * ComputeRayResultWithTime(NewRay, Depth - 1);
+	float ScatteringPDF = Hit.Material->ScatteringPDF(Ray, Hit.Geometry, Scattered);
+
+	Math::FVector4 ScatteredColor = Attenuation * ComputeRayResultWithTime(Scattered, Depth - 1);
 	ScatteredColor = ScatteredColor * ScatteringPDF / PDFValue;
 	return ScatteredColor + EmittedColor;
 }
