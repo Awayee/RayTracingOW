@@ -7,6 +7,7 @@
 
 class RayTracingCamera;
 class RayTracingScene;
+class RayTracingHittable;
 
 struct RenderResult {
 	uint32 Width;

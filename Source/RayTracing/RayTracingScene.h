@@ -3,9 +3,9 @@
 #include "RayTracing/RayTracingObject.h"
 #include "Core/TUniquePtr.h"
 
-typedef std::vector<TUniquePtr<RayTracingObjectBase>> ObjectArray;
+typedef std::vector<TUniquePtr<RayTracingHittable>> ObjectArray;
 
-class RTVirtualNode: public RayTracingObjectBase {
+class RTVirtualNode: public RayTracingHittable {
 public:
 	RTVirtualNode(const std::vector<RTVirtualNode>& InTree, uint32 InLeft, uint32 InRight);
 	RTVirtualNode(const RTVirtualNode&) = delete;
@@ -29,10 +29,12 @@ public:
 	void SetBackground(TexturePtr&& Texture);
 	void AddSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial);
 	void AddMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial, const Math::FVector3& MoveTarget);
-	void AddObject(TUniquePtr<RayTracingObjectBase>&& InObject);
+	void AddObject(RTObjectPtr&& InObject);
+	void AddLight(TUniquePtr<RayTracingHittable>&& InLight);
 	void BuildHierarchy();
 	bool TestRay(const Math::FRay& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const;
 	bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const;
+	const ObjectArray& GetLights() const;
 	Math::FVector4 RayFallback(const Math::FRay& InRay);
 private:
 	struct BVHNode {
@@ -50,6 +52,7 @@ private:
 
 	TexturePtr Background;
 	ObjectArray Objects;
+	ObjectArray Lights;
 	std::vector<BVHNode> Nodes;
 
 	uint32 RecursivelyBuildNode(uint32 ObjectStart, uint32 ObjectEnd, uint32 Depth);

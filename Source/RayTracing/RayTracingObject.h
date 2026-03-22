@@ -7,17 +7,19 @@ struct RayHitSurface {
 	const MaterialBase* Material{ nullptr };
 };
 
-class RayTracingObjectBase {
+class RayTracingHittable {
 public:
-	virtual ~RayTracingObjectBase();
+	virtual ~RayTracingHittable();
 	virtual bool TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const;// TODO discard
 	virtual bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const;
 	virtual Math::FAABB3 GetAABB() const = 0;
+	virtual float GetPDFValue(const Math::FVector3& Origin, const Math::FVector3& Direction) const;
+	virtual Math::FVector3 Random(const Math::FVector3& Origin) const;
 };
 
-typedef TUniquePtr<RayTracingObjectBase> RTObjectPtr;
+typedef TUniquePtr<RayTracingHittable> RTObjectPtr;
 
-class RTSphere: public RayTracingObjectBase {
+class RTSphere: public RayTracingHittable {
 public:
 	RTSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial);
 	virtual bool TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
@@ -28,14 +30,17 @@ protected:
 	Math::FAABB3 AABB;
 };
 
-class RTQuad: public RayTracingObjectBase {
+class RTQuad: public RayTracingHittable {
 public:
 	RTQuad(const Math::FQuad& InQuad, MaterialPtr&& InMaterial);
 	virtual bool TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
 	virtual Math::FAABB3 GetAABB() const override;
+	virtual float GetPDFValue(const Math::FVector3& Origin, const Math::FVector3& Direction) const override;
+	virtual Math::FVector3 Random(const Math::FVector3& Origin) const override;
 private:
 	Math::FQuad GeometryQuad;
 	Math::FAABB3 AABB;
+	float Area;
 	MaterialPtr SurfaceMaterial;
 };
 
@@ -49,7 +54,7 @@ private:
 	float MoveDistance;
 };
 
-class RTBox: public RayTracingObjectBase {
+class RTBox: public RayTracingHittable {
 public:
 	RTBox(const Math::FVector3& A, const Math::FVector3& B, MaterialPtr&& InMaterial);
 	virtual bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;

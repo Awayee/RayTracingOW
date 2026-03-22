@@ -2,7 +2,7 @@
 #include "Math/Matrix.h"
 #include "RayTracing/RayTracingObject.h"
 
-class RTTranslated: public RayTracingObjectBase {
+class RTTranslated: public RayTracingHittable {
 public:
 	RTTranslated(RTObjectPtr&& InObject, const Math::FVector3& InTranslation);
 	virtual bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
@@ -13,7 +13,7 @@ private:
 	Math::FVector3 Translation;
 };
 
-class RTRotatedY: public RayTracingObjectBase {
+class RTRotatedY: public RayTracingHittable {
 public:
 	RTRotatedY(RTObjectPtr&& InObject, float Radian);
 	virtual bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;

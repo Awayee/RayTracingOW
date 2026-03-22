@@ -206,9 +206,11 @@ static void InitializeCornellBox(RayTracingCamera* Camera, RayTracingScene* Scen
 	const Math::Color8 LightColor{1.0f, 1.0f, 1.0f, 1.0f};
 	const float LightScale = 15.0f;
 
+	Scene->AddLight(RTObjectPtr(new RTQuad(Math::FQuad{ {343, 554, 332}, {-130, 0, 0}, {0, 0, -105} }, EmissiveMaterial(LightColor, LightScale))));
+
+	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{ {343, 554, 332}, {-130, 0, 0}, {0, 0, -105} }, EmissiveMaterial(LightColor, LightScale))));
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{555, 0, 0}, {0, 0, 555}, {0, 555, 0}}, SolidColorLambertian(Green))));
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 0}, {0, 555, 0}, {0, 0, 555}}, SolidColorLambertian(Red))));
-	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{343, 554, 332}, {-130, 0, 0}, {0, 0, -105} }, EmissiveMaterial(LightColor, LightScale))));
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 0}, {0, 0, 555}, {555, 0, 0}}, SolidColorLambertian(White))));
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{555, 555, 555}, {-555, 0, 0}, {0, 0, -555}}, SolidColorLambertian(White))));
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 555}, {0, 555, 0}, {555, 0, 0}}, SolidColorLambertian(White))));

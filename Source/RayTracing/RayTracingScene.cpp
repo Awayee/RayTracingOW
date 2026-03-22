@@ -5,7 +5,7 @@
 #include "Core/Log.h"
 
 template<int Axis>
-bool CompareAABBByAxis(const TUniquePtr<RayTracingObjectBase>& L, const TUniquePtr<RayTracingObjectBase>& R) {
+bool CompareAABBByAxis(const TUniquePtr<RayTracingHittable>& L, const TUniquePtr<RayTracingHittable>& R) {
 	return L->GetAABB().Min[Axis] < R->GetAABB().Max[Axis];
 }
 
@@ -40,15 +40,19 @@ void RayTracingScene::SetBackground(TexturePtr&& Texture) {
 }
 
 void RayTracingScene::AddSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial) {
-	Objects.emplace_back(new RTSphere(InSphere, MoveTemp(InMaterial)));
+	AddObject(RTObjectPtr(new RTSphere(InSphere, MoveTemp(InMaterial))));
 }
 
 void RayTracingScene::AddMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial, const Math::FVector3& MoveTarget) {
-	Objects.emplace_back(new RTMovableSphere(InSphere, MoveTemp(InMaterial), MoveTarget));
+	AddObject(RTObjectPtr(new RTMovableSphere(InSphere, MoveTemp(InMaterial), MoveTarget)));
 }
 
-void RayTracingScene::AddObject(TUniquePtr<RayTracingObjectBase>&& InObject) {
+void RayTracingScene::AddObject(RTObjectPtr&& InObject) {
 	Objects.push_back(MoveTemp(InObject));
+}
+
+void RayTracingScene::AddLight(TUniquePtr<RayTracingHittable>&& InLight) {
+	Lights.push_back(MoveTemp(InLight));
 }
 
 void RayTracingScene::BuildHierarchy() {
@@ -58,7 +62,7 @@ void RayTracingScene::BuildHierarchy() {
 bool RayTracingScene::TestRay(const Math::FRay& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const {
 	bool hitAnything = false;
 	float closestDistance = DistanceMax;
-	for(const TUniquePtr<RayTracingObjectBase>& obj: Objects) {
+	for(const TUniquePtr<RayTracingHittable>& obj: Objects) {
 		if(obj->TestRay(InRay, DistanceMin, closestDistance, OutHit)) {
 			closestDistance = OutHit.Geometry.Distance;
 			hitAnything = true;
@@ -70,7 +74,7 @@ bool RayTracingScene::TestRay(const Math::FRay& InRay, float DistanceMin, float 
 bool RayTracingScene::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const {
 	//bool hitAnything = false;
 	//float closestDistance = DistanceMax;
-	//for (const TUniquePtr<RayTracingObjectBase>& obj : Objects) {
+	//for (const TUniquePtr<RayTracingHittable>& obj : Objects) {
 	//	if (obj->TestRayWithTime(InRay, DistanceMin, closestDistance, OutHit)) {
 	//		closestDistance = OutHit.Geometry.Distance;
 	//		hitAnything = true;
@@ -78,6 +82,10 @@ bool RayTracingScene::TestRayWithTime(const Math::FRayWithTime& InRay, float Dis
 	//}
 	//return hitAnything;
 	return RecursivelyTestRayWithTime(0, InRay, DistanceMin, DistanceMax, OutHit);
+}
+
+const ObjectArray& RayTracingScene::GetLights() const {
+	return Lights;
 }
 
 Math::FVector4 RayTracingScene::RayFallback(const Math::FRay& InRay) {
@@ -122,7 +130,7 @@ uint32 RayTracingScene::RecursivelyBuildNode(uint32 ObjectStart, uint32 ObjectEn
 			Node.AABB.Union(Objects[i]->GetAABB());
 		}
 		int Axis = Node.AABB.GetMaxAxis();
-		std::sort(Objects.begin()+ObjectStart, Objects.begin()+ObjectEnd, [Axis](const TUniquePtr<RayTracingObjectBase>& L, const TUniquePtr<RayTracingObjectBase>& R) {
+		std::sort(Objects.begin()+ObjectStart, Objects.begin()+ObjectEnd, [Axis](const TUniquePtr<RayTracingHittable>& L, const TUniquePtr<RayTracingHittable>& R) {
 			return L->GetAABB().Min[Axis] < R->GetAABB().Min[Axis];
 		});
 		const uint32 Mid = (ObjectStart + ObjectEnd) / 2;

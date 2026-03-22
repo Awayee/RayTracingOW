@@ -2,7 +2,7 @@
 #include "RayTracing/RayTracingObject.h"
 #include "RayTracing/Material.h"
 
-class RTConstantMedium : public RayTracingObjectBase {
+class RTConstantMedium : public RayTracingHittable {
 public:
 	RTConstantMedium(RTObjectPtr&& InObject, float InDensity, Math::Color8 Albedo);
 	RTConstantMedium(RTObjectPtr&& InObject, float InDensity, TexturePtr&& InTexture);

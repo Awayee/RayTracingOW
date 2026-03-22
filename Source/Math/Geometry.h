@@ -68,6 +68,10 @@ namespace Math {
 		FQuad(const FVector3& InQ, const FVector3& InU, const FVector3& InV);
 		bool TestRay(const FRay& InRay, float DistanceMin, float DistanceMax, FRayHit& OutHit) const;
 		FAABB3 GetAABB() const;
+		float GetArea() const;
+		const Math::FVector3& GetOrigin() const;
+		const Math::FVector3& GetU() const;
+		const Math::FVector3& GetV() const;
 	private:
 		//   V - 
 		//  /  /

@@ -1,14 +1,22 @@
 #include "RayTracing/RayTracingObject.h"
 #include "Core/Defines.h"
 
-RayTracingObjectBase::~RayTracingObjectBase()=default;
+RayTracingHittable::~RayTracingHittable()=default;
 
-bool RayTracingObjectBase::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RayTracingHittable::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
 	return false;
 }
 
-bool RayTracingObjectBase::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RayTracingHittable::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
 	return TestRay((const Math::FRay&)InRay, DistanceMin, DistanceMax, OutHitSurface);
+}
+
+float RayTracingHittable::GetPDFValue(const Math::FVector3& Origin, const Math::FVector3& Direction) const {
+	return 0.0f;
+}
+
+Math::FVector3 RayTracingHittable::Random(const Math::FVector3& Origin) const {
+	return Math::FVector3{ 1.0f, 0.0f, 0.0f };
 }
 
 RTSphere::RTSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial):
@@ -28,9 +36,10 @@ Math::FAABB3 RTSphere::GetAABB() const {
 	return AABB;
 }
 
-RTQuad::RTQuad(const Math::FQuad& InQuad, MaterialPtr&& InMaterial): RayTracingObjectBase(), GeometryQuad(InQuad), SurfaceMaterial(MoveTemp(InMaterial)) {
+RTQuad::RTQuad(const Math::FQuad& InQuad, MaterialPtr&& InMaterial): RayTracingHittable(), GeometryQuad(InQuad), SurfaceMaterial(MoveTemp(InMaterial)) {
 	// Compute the bounding box of all four vertices.
 	AABB = InQuad.GetAABB();
+	Area = InQuad.GetArea();
 }
 
 bool RTQuad::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
@@ -43,6 +52,21 @@ bool RTQuad::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax
 
 Math::FAABB3 RTQuad::GetAABB() const {
 	return AABB;
+}
+
+float RTQuad::GetPDFValue(const Math::FVector3& Origin, const Math::FVector3& Direction) const {
+	RayHitSurface Hit;
+	if (!TestRayWithTime(Math::FRayWithTime{ Origin, Direction, 0.0f}, 0.0001f, 99999.0f, Hit)) {
+		return 0.0f;
+	}
+	const float DistanceSq = Hit.Geometry.Distance * Hit.Geometry.Distance * Direction.LengthSquared();
+	const float Cosine = Math::Abs(Direction.Dot(Hit.Geometry.Normal) / Direction.Length());
+	return DistanceSq / (Cosine * Area);
+}
+
+Math::FVector3 RTQuad::Random(const Math::FVector3& Origin) const {
+	const Math::FVector3 P = GeometryQuad.GetOrigin() + (Math::Random01() * GeometryQuad.GetU()) + (Math::Random01() * GeometryQuad.GetV());
+	return (P - Origin).Normalize();
 }
 
 RTMovableSphere::RTMovableSphere(const Math::FSphere& InSphere, MaterialPtr&& InMatrial, const Math::FVector3& InMoveTarget):

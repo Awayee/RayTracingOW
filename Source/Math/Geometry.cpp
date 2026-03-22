@@ -221,6 +221,22 @@ namespace Math {
 		return Math::FAABB3{Min, Max};
 	}
 
+	float FQuad::GetArea() const {
+		return U.Cross(V).Length();
+	}
+
+	const Math::FVector3& FQuad::GetOrigin() const {
+		return Q;
+	}
+
+	const Math::FVector3& FQuad::GetU() const {
+		return U;
+	}
+
+	const Math::FVector3& FQuad::GetV() const {
+		return V;
+	}
+
 	FBox::FBox(const FVector3& A, const FVector3& B) {
 		Math::FVector3 Min = Math::FVector3::Min(A, B);
 		Math::FVector3 Max = Math::FVector3::Max(A, B);
