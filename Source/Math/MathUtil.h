@@ -12,7 +12,7 @@ namespace Math {
 
 	FVector3 RandomVector(float min, float max);
 
-	FVector3 RandomUintVector();
+	FVector3 RandomUnitVector();
 
 	FVector3 RandomUniformOnSphere();
 

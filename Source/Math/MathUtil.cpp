@@ -1,13 +1,15 @@
 #include "MathUtil.h"
 
 #include <random>
+#include <cstdlib>
 
 namespace Math {
 
 	float Random01() {
-		static std::uniform_real_distribution<float> distribution(0.0, 1.0);
-		static std::mt19937 generator;
-		return distribution(generator);
+		// static std::uniform_real_distribution<float> distribution(0.0, 1.0);
+		// static std::mt19937 generator;
+		// return distribution(generator);
+		return (float)std::rand() / (float)(RAND_MAX + 1.0);
 	}
 
 	float Random(float min, float max) {
@@ -26,7 +28,7 @@ namespace Math {
 		return FVector3{ Random(min, max), Random(min, max), Random(min, max) };
 	}
 
-	FVector3 RandomUintVector() {
+	FVector3 RandomUnitVector() {
 		FVector3 result = RandomVector(-1.0f, 1.0f);
 		if (result.IsNearlyZero()) {
 			result = FVector3{ 0,1,0 };
@@ -52,7 +54,7 @@ namespace Math {
 
     FVector3 RandomOnHemisphere(const FVector3& normal) {
 		// 1. random generate a point until locate in unit sphere
-		FVector3 result = RandomUintVector();
+		FVector3 result = RandomUnitVector();
 		// 2. map the point from sphere to hemisphere
 		if (result.Dot(normal) < 0.0f) {
 			return -result;

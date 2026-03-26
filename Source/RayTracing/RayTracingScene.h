@@ -3,8 +3,6 @@
 #include "RayTracing/RayTracingObject.h"
 #include "Core/TUniquePtr.h"
 
-typedef std::vector<TUniquePtr<RayTracingHittable>> ObjectArray;
-
 class RTVirtualNode: public RayTracingHittable {
 public:
 	RTVirtualNode(const std::vector<RTVirtualNode>& InTree, uint32 InLeft, uint32 InRight);

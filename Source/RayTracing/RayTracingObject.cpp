@@ -1,5 +1,6 @@
 #include "RayTracing/RayTracingObject.h"
 #include "Core/Defines.h"
+#include "Math/OrthonormalBasis.h"
 
 RayTracingHittable::~RayTracingHittable()=default;
 
@@ -36,6 +37,38 @@ Math::FAABB3 RTSphere::GetAABB() const {
 	return AABB;
 }
 
+inline Math::FVector3 RandomToSphere(float Radius, float DistanceSq) {
+	float R1 = Math::Random01();
+	float R2 = Math::Random01();
+	float CosTheta = 1.0f + R2 * (Math::Sqrt(1 - Radius * Radius / DistanceSq) - 1);
+	float SinTheta = Math::Sqrt(1.0f - CosTheta * CosTheta);
+	float Phi = 2 * Math::PI * R1;
+	return Math::FVector3{
+		Math::Cos(Phi) * SinTheta,
+		Math::Sin(Phi) * SinTheta,
+		CosTheta
+	};
+}
+float RTSphere::GetPDFValue(const Math::FVector3& Origin, const Math::FVector3& Direction) const {
+	// Only for stationary spheres.
+	Math::FRayHit Hit;
+	if (!GeometrySphere.TestRay(Math::FRay{ Origin, Direction }, 0.0001f, 99999.0f, Hit)) {
+		return 0.0f;
+	}
+	const float Radius = GeometrySphere.Radius;
+	const float DistanceSq = (GeometrySphere.Center - Origin).LengthSquared();
+	const float CosThetaMax = Math::Sqrt(1.0f - Radius * Radius / DistanceSq);
+	const float SolidAngle = 2.0f * Math::PI * (1.0f - CosThetaMax);
+	return 1.0f / SolidAngle;
+}
+
+Math::FVector3 RTSphere::Random(const Math::FVector3& Origin) const {
+	Math::FVector3 Direction = GeometrySphere.Center - Origin;
+	float DistanceSq = Direction.LengthSquared();
+	Math::FOrthNormalBasis UVW{ Direction };
+	return UVW.Transform(RandomToSphere(GeometrySphere.Radius, DistanceSq));
+}
+
 RTQuad::RTQuad(const Math::FQuad& InQuad, MaterialPtr&& InMaterial): RayTracingHittable(), GeometryQuad(InQuad), SurfaceMaterial(MoveTemp(InMaterial)) {
 	// Compute the bounding box of all four vertices.
 	AABB = InQuad.GetAABB();
@@ -55,12 +88,12 @@ Math::FAABB3 RTQuad::GetAABB() const {
 }
 
 float RTQuad::GetPDFValue(const Math::FVector3& Origin, const Math::FVector3& Direction) const {
-	RayHitSurface Hit;
-	if (!TestRayWithTime(Math::FRayWithTime{ Origin, Direction, 0.0f}, 0.0001f, 99999.0f, Hit)) {
+	Math::FRayHit Hit;
+	if (!GeometryQuad.TestRay(Math::FRay{Origin, Direction}, 0.0001f, 99999.0f, Hit)){
 		return 0.0f;
 	}
-	const float DistanceSq = Hit.Geometry.Distance * Hit.Geometry.Distance * Direction.LengthSquared();
-	const float Cosine = Math::Abs(Direction.Dot(Hit.Geometry.Normal) / Direction.Length());
+	const float DistanceSq = Hit.Distance * Hit.Distance * Direction.LengthSquared();
+	const float Cosine = Math::Abs(Direction.Dot(Hit.Normal) / Direction.Length());
 	return DistanceSq / (Cosine * Area);
 }
 

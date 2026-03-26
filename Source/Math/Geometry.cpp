@@ -46,7 +46,7 @@ namespace Math {
 		if (Discriminant < 0.0f) {
 			return false;
 		}
-		const float SqrtD = std::sqrt(Discriminant);
+		const float SqrtD = Math::Sqrt(Discriminant);
 		float t = (h - SqrtD) / a;
 		if (t < DistanceMin || t > DistanceMax) {
 			t = (h + SqrtD) / a;

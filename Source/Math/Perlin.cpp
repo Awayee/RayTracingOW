@@ -22,7 +22,7 @@ namespace Math {
 		//	RandFloat[i] = Random01();
 		//}
 		for(int i=0; i<POINT_COUNT; ++i) {
-			RandVectors[i] = RandomUintVector();
+			RandVectors[i] = RandomUnitVector();
 		}
 		PerlinGeneratePerm(PermX, POINT_COUNT);
 		PerlinGeneratePerm(PermY, POINT_COUNT);

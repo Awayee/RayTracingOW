@@ -19,11 +19,15 @@ public:
 
 typedef TUniquePtr<RayTracingHittable> RTObjectPtr;
 
+typedef std::vector<RTObjectPtr> ObjectArray;
+
 class RTSphere: public RayTracingHittable {
 public:
 	RTSphere(const Math::FSphere& InSphere, MaterialPtr&& InMaterial);
 	virtual bool TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
 	virtual Math::FAABB3 GetAABB() const override;
+	virtual float GetPDFValue(const Math::FVector3& Origin, const Math::FVector3& Direction) const override;
+	virtual Math::FVector3 Random(const Math::FVector3& Origin) const override;
 protected:
 	Math::FSphere GeometrySphere;
 	MaterialPtr SurfaceMaterial;

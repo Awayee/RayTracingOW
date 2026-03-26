@@ -16,9 +16,9 @@ static constexpr uint32 WINDOW_HEIGHT = 450;
 static constexpr uint32 RAY_RECURSIVE_DEPTH = 32;
 static constexpr uint32 NUM_RAYS_PER_PIXEL =
 #ifdef _DEBUG
-8
+64
 #else
-16
+256
 #endif
 ;
 
@@ -52,8 +52,12 @@ inline MaterialPtr NoiseLambertian(float Scale) {
 	return MaterialPtr(new LambertMaterial(TexturePtr(new NoiseTexture(Scale))));
 }
 
+inline MaterialPtr MakeDielectricMaterial(float RefractionIndex) {
+	return MaterialPtr(new DielectricMaterial(RefractionIndex));
+}
+
 inline RTObjectPtr MakeGlassSphere(const Math::FVector3& Center, float Radius, float RefractionIndex) {
-	return RTObjectPtr(new RTSphere({Center, Radius}, MaterialPtr(new DielectricMaterial(RefractionIndex))));
+	return RTObjectPtr(new RTSphere({Center, Radius}, MakeDielectricMaterial(RefractionIndex)));
 }
 
 inline void AddBox(RayTracingScene* Scene, const Math::FVector3& A, const Math::FVector3& B, Math::Color8 Color) {
@@ -206,8 +210,6 @@ static void InitializeCornellBox(RayTracingCamera* Camera, RayTracingScene* Scen
 	const Math::Color8 LightColor{1.0f, 1.0f, 1.0f, 1.0f};
 	const float LightScale = 15.0f;
 
-	Scene->AddLight(RTObjectPtr(new RTQuad(Math::FQuad{ {343, 554, 332}, {-130, 0, 0}, {0, 0, -105} }, EmissiveMaterial(LightColor, LightScale))));
-
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{ {343, 554, 332}, {-130, 0, 0}, {0, 0, -105} }, EmissiveMaterial(LightColor, LightScale))));
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{555, 0, 0}, {0, 0, 555}, {0, 555, 0}}, SolidColorLambertian(Green))));
 	Scene->AddObject(RTObjectPtr(new RTQuad(Math::FQuad{{0, 0, 0}, {0, 555, 0}, {0, 0, 555}}, SolidColorLambertian(Red))));
@@ -220,8 +222,23 @@ static void InitializeCornellBox(RayTracingCamera* Camera, RayTracingScene* Scen
 	//AddBox(Scene, {265, 0, 295}, {430, 330, 460}, White);
 	//Scene->AddObject(RTObjectPtr(new RTBox({ 130, 0, 65 }, { 295, 165, 230 }, SolidColorLambertian(White))));
 	//Scene->AddObject(RTObjectPtr(new RTBox({ 265, 0, 295 }, { 430, 330, 460 }, SolidColorLambertian(White))));
+
+	// The back cube
 	Scene->AddObject(TransformedObject<RTBox>({ 265,0,295 }, 15 * Math::Deg2Rad, Math::FVector3{0,0,0}, Math::FVector3{ 165,330,165 }, SolidColorLambertian(White)));
-	Scene->AddObject(TransformedObject<RTBox>({ 130,0,65 }, -30 * Math::Deg2Rad, Math::FVector3{ 0,0,0 }, Math::FVector3{ 165,165,165 }, SolidColorLambertian(White)));
+
+	// Test specular box (the back cube)
+	const Math::FVector4 MentalColor{ 0.80f, 0.85f, 0.88f, 1.0f };
+	// Scene->AddObject(TransformedObject<RTBox>({ 265,0,295 }, 15 * Math::Deg2Rad, Math::FVector3{0,0,0}, Math::FVector3{ 165,330,165 }, SolidColorMetal(MentalColor, 0.0f)));
+
+	// Test glass sphere
+	Scene->AddObject(MakeGlassSphere({ 190.0f, 90.0f, 190.0f }, 90.0f, 1.5f));
+
+	// The front cube
+	// Scene->AddObject(TransformedObject<RTBox>({ 130,0,65 }, -30 * Math::Deg2Rad, Math::FVector3{ 0,0,0 }, Math::FVector3{ 165,165,165 }, SolidColorLambertian(White)));
+
+	// Mark lights
+	Scene->AddLight(RTObjectPtr(new RTQuad(Math::FQuad{ {343, 554, 332}, {-130, 0, 0}, {0, 0, -105} }, EmissiveMaterial(LightColor, LightScale))));
+	 //Scene->AddLight(RTObjectPtr(new RTSphere{Math::FSphere{{190,90, 190}, 90}, EmissiveMaterial(LightColor, LightScale)}));
 
 	Camera->SetFov(40.0f * Math::Deg2Rad);
 	Camera->SetView({278, 278, -800}, {278, 278, 0}, {0, 1, 0});

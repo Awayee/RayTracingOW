@@ -48,6 +48,14 @@ void RayTracingRenderer::Render() {
 		// 	Color += ComputeRayResultWithTime(Ray, RecursiveDepth);
 		// }
 		Color *= SampleScale;
+		
+		// Replace NaN components with zero.
+		for(int32 Comp=0; Comp <3; ++Comp){
+			if(Color[Comp] != Color[Comp]){
+				Color[Comp] = 0.0f;
+			}
+		}
+		
 		const Math::Color8 ColorUNorm{Color};
 		Pixels[j * RenderWidth + i] = ColorUNorm;
 	});
@@ -89,9 +97,9 @@ Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWith
 		return Scene->RayFallback(Ray);
 	}
 
-	if(!Hit.Geometry.FrontFace){
-		return Scene->RayFallback(Ray);
-	}
+	//if(!Hit.Geometry.FrontFace){
+	//	return Scene->RayFallback(Ray);
+	//}
 
 	//const FVector3 direction = RandomOnHemisphere(hit.Normal);
 	if (!Hit.Material) {
@@ -99,65 +107,47 @@ Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWith
 		return MaterialBase::Fallback;
 	}
 
+	// Emit
 	const Math::FVector4 EmittedColor = Hit.Material->Emitted(Hit.Geometry);
-	Math::FVector4 Attenuation;
-	Math::FRayWithTime Scattered;
-	float PDFValue;
-	if (!Hit.Material->ScatterWithTime(Ray, Hit.Geometry, Attenuation, Scattered, PDFValue)) {
+
+	FScatterRecord ScatterRecord;
+	if(!Hit.Material->Scatter(Ray, Hit.Geometry, ScatterRecord)) {
 		return EmittedColor;
 	}
 
-	// TODO hard code light
-	 //Math::FVector3 OnLight = Math::FVector3{Math::Random(213.0f, 343.0f), 554.0f, Math::Random(227.0f, 332.0f)};
-	 //Math::FVector3 ToLight = OnLight - Hit.Geometry.Position;
-	 //float DistanceSq = ToLight.LengthSquared();
-	 //if(ToLight.Dot(Hit.Geometry.Normal) < 0.0f){
-	 //	return EmittedColor;
-	 //}
-	 //ToLight.NormalizeSelf();
-	 //float LightArea = (343.0f - 213.0f) * (332.0f - 227.0f);
-	 //float LightCosine = Math::Abs(ToLight.Y);
-	 //if(LightCosine < 0.000001f){
-	 //	return EmittedColor;
-	 //}
-	 //PDFValue = DistanceSq / (LightCosine * LightArea);
-	 //Scattered = Math::FRayWithTime(Hit.Geometry.Position, ToLight, Ray.Time);
+	if(!ScatterRecord.bContinue){
+		return EmittedColor + ScatterRecord.Attenuation;
+	}
 
-	// Scattering PDF
+	// Do not scattered.
+	if(!ScatterRecord.PDF.Get()) {
+		return ScatterRecord.Attenuation * ComputeRayResultWithTime(ScatterRecord.Scattered, Depth - 1);
+	}
 
-	//FCosinePDF SurfacePDF{Hit.Geometry.Normal};
-	//Math::FVector3 ScatteredDir = SurfacePDF.GenerateDirection();
-	//Scattered = Math::FRayWithTime{Hit.Geometry.Position, ScatteredDir, Scattered.Time};
-	//PDFValue = SurfacePDF.GetPDFValue(ScatteredDir);
+	Math::FRayWithTime Scattered;
+	float PDFValue;
 
-	FCosinePDF CosinePDF{ Hit.Geometry.Normal };
-
+	// Sample lights
 	const ObjectArray& Lights = Scene->GetLights();
+
 	if(!Lights.empty()) {
-		// Random Choose a light
-		const uint32 LightIndexMax = (uint32)Lights.size() - 1;
-		const float RandomVal = Math::Random01();
-		uint32 LightIndex = (uint32)(RandomVal * (float)LightIndexMax);
-		LightIndex = Math::Clamp<uint32>(LightIndex, 0u, LightIndexMax);
-
-		// Use mixture pdf
-		const RayTracingHittable* Light = Lights[LightIndex].Get();
-		FHittablePDF LightPDF{ Light, Hit.Geometry.Position };
-		FMixturePDF MixturePDF{ &LightPDF, &CosinePDF };
-
-		// Calc pdf
-		const Math::FVector3 ScatteredDir = MixturePDF.GenerateDirection();
-		Scattered = Math::FRayWithTime(Hit.Geometry.Position, ScatteredDir, Ray.Time);
-		PDFValue = MixturePDF.GetPDFValue(ScatteredDir);
+		FHittableListPDF PDF{ Lights, Hit.Geometry.Position };
+		FMixturePDF MixturePDF{ ScatterRecord.PDF.Get(), &PDF};
+		// Scattered ray
+		const Math::FVector3 ScatteredDirection = MixturePDF.GenerateDirection();
+		Scattered = Math::FRayWithTime{ Hit.Geometry.Position, ScatteredDirection, Ray.Time };
+		PDFValue = MixturePDF.GetPDFValue(ScatteredDirection);
 	}
 	else {
-		const Math::FVector3 ScatteredDir = CosinePDF.GenerateDirection();
-		Scattered = Math::FRayWithTime(Hit.Geometry.Position, ScatteredDir, Ray.Time);
-		PDFValue = CosinePDF.GetPDFValue(ScatteredDir);
+		const Math::FVector3 ScatteredDirection = ScatterRecord.PDF->GenerateDirection();
+		Scattered = Math::FRayWithTime{ Hit.Geometry.Position, ScatteredDirection, Ray.Time };
+		PDFValue = ScatterRecord.PDF->GetPDFValue(ScatteredDirection);
 	}
 
 	const float ScatteringPDF = Hit.Material->ScatteringPDF(Ray, Hit.Geometry, Scattered);
+
+	// Recursively ray sampling
 	const Math::FVector4 SampledColor = ComputeRayResultWithTime(Scattered, Depth - 1);
-	const Math::FVector4 ScatteredColor = Attenuation * ScatteringPDF * SampledColor / PDFValue;
+	const Math::FVector4 ScatteredColor = ScatterRecord.Attenuation * ScatteringPDF * SampledColor / PDFValue;
 	return ScatteredColor + EmittedColor;
 }
