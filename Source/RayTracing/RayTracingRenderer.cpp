@@ -90,7 +90,7 @@ Math::FVector4 RayTracingRenderer::ComputeRayResult(const Math::FRay& Ray, uint3
 
 Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWithTime& Ray, uint32 Depth) {
 	if (0u == Depth) {
-		return Math::FVector4{ 1.0f, 1.0f, 1.0f, 1.0f };
+		return Scene->RayFallback(Ray);
 	}
 	RayHitSurface Hit;
 	if (!Scene->TestRayWithTime(Ray, 0.001f, RAY_MAX_DISTANCE, Hit)) {
