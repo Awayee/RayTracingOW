@@ -11,7 +11,6 @@ public:
 	void SetFocusDistance(float InDistance);
 	void SetDefocusAngle(float InAngle);
 	Math::USize GetRenderSize() const;
-	Math::FRay GetRandomRay(uint32 i, uint32 j) const;
 	Math::FRayWithTime GetRandomRayWithTime(uint32 i, uint32 j) const;
 	Math::FRayWithTime GetRandomRayWithTimeOffset(uint32 i, uint32 j, const Math::FVector3& Offset) const;
 	void SetupRayData();

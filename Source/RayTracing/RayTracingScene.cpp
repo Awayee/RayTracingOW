@@ -18,7 +18,7 @@ RTVirtualNode::RTVirtualNode(const std::vector<RTVirtualNode>& InTree, uint32 In
 	}
 }
 
-bool RTVirtualNode::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RTVirtualNode::TestRay(const Math::FRayWithTime& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
 	if(AABB.TestRay(Ray, DistanceMin, DistanceMax)) {
 		bool bLeft = ChildLeft!=INVALID_INDEX_U32 && Tree[ChildLeft].TestRay(Ray, DistanceMin, DistanceMax, OutHitSurface);
 		bool bRight = ChildRight!= INVALID_INDEX_U32 && Tree[ChildRight].TestRay(Ray, DistanceMin, DistanceMax, OutHitSurface);
@@ -59,23 +59,11 @@ void RayTracingScene::BuildHierarchy() {
 	RecursivelyBuildNode(0, (uint32)Objects.size(), 0);
 }
 
-bool RayTracingScene::TestRay(const Math::FRay& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const {
-	bool hitAnything = false;
-	float closestDistance = DistanceMax;
-	for(const TUniquePtr<RayTracingHittable>& obj: Objects) {
-		if(obj->TestRay(InRay, DistanceMin, closestDistance, OutHit)) {
-			closestDistance = OutHit.Geometry.Distance;
-			hitAnything = true;
-		}
-	}
-	return hitAnything;
-}
-
 bool RayTracingScene::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const {
 	//bool hitAnything = false;
 	//float closestDistance = DistanceMax;
 	//for (const TUniquePtr<RayTracingHittable>& obj : Objects) {
-	//	if (obj->TestRayWithTime(InRay, DistanceMin, closestDistance, OutHit)) {
+	//	if (obj->TestRay(InRay, DistanceMin, closestDistance, OutHit)) {
 	//		closestDistance = OutHit.Geometry.Distance;
 	//		hitAnything = true;
 	//	}
@@ -152,11 +140,11 @@ bool RayTracingScene::RecursivelyTestRayWithTime(uint32 NodeIdx, const Math::FRa
 
 	bool bHit = false;
 	if(Node.LeftObject != INVALID_INDEX_U32) {
-		bHit |= Objects[Node.LeftObject]->TestRayWithTime(Ray, DistanceMin, DistanceMax, OutHitSurface);
+		bHit |= Objects[Node.LeftObject]->TestRay(Ray, DistanceMin, DistanceMax, OutHitSurface);
 	}
 	if(Node.RightObject != INVALID_INDEX_U32 && Node.RightObject != Node.LeftObject) {
 		DistanceMax = bHit ? OutHitSurface.Geometry.Distance : DistanceMax;
-		bHit |= Objects[Node.RightObject]->TestRayWithTime(Ray, DistanceMin, DistanceMax, OutHitSurface);
+		bHit |= Objects[Node.RightObject]->TestRay(Ray, DistanceMin, DistanceMax, OutHitSurface);
 	}
 	if(Node.LeftNode != INVALID_INDEX_U32) {
 		bHit |= RecursivelyTestRayWithTime(Node.LeftNode, Ray, DistanceMin, DistanceMax, OutHitSurface);

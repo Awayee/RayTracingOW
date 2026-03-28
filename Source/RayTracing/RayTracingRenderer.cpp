@@ -36,7 +36,7 @@ void RayTracingRenderer::Render() {
 				};
 				// Get ray by stratified
 				const Math::FRayWithTime Ray = Camera->GetRandomRayWithTimeOffset(i, j, Offset);
-				Color += ComputeRayResultWithTime(Ray, RecursiveDepth);
+				Color += ComputeRayResult(Ray, RecursiveDepth);
 			}
 		}
 		// for (uint32 Sample = 0; Sample < NumRaysPerPixel; ++Sample) {
@@ -45,7 +45,7 @@ void RayTracingRenderer::Render() {
 
 
 		// 	const Math::FRayWithTime Ray = Camera->GetRandomRayWithTime(i, j);
-		// 	Color += ComputeRayResultWithTime(Ray, RecursiveDepth);
+		// 	Color += ComputeRayResult(Ray, RecursiveDepth);
 		// }
 		Color *= SampleScale;
 		
@@ -66,29 +66,7 @@ RenderResult RayTracingRenderer::GetRenderResult() const {
 	return RenderResult{ RenderSize.X, RenderSize.Y, Pixels.data()};
 }
 
-Math::FVector4 RayTracingRenderer::ComputeRayResult(const Math::FRay& Ray, uint32 Depth) {
-	if (0u == Depth) {
-		return Math::FVector4{ 1.0f, 1.0f, 1.0f, 1.0f };
-	}
-	RayHitSurface Hit;
-	if (Scene->TestRay(Ray, 0.001f, RAY_MAX_DISTANCE, Hit)) {
-		//const FVector3 direction = RandomOnHemisphere(hit.Normal);
-		if (Hit.Material) {
-			Math::FVector4 Color;
-			Math::FRay OutRay;
-			float PDFValue;
-			if (Hit.Material->Scatter(Ray, Hit.Geometry, Color, OutRay, PDFValue)) {
-				return Color * ComputeRayResult(OutRay, Depth - 1);
-			}
-		}
-		return Math::FVector4{ 1.0f, 1.0f, 1.0f, 1.0f };
-	}
-	else {
-		return Scene->RayFallback(Ray);
-	}
-}
-
-Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWithTime& Ray, uint32 Depth) {
+Math::FVector4 RayTracingRenderer::ComputeRayResult(const Math::FRayWithTime& Ray, uint32 Depth) {
 	if (0u == Depth) {
 		return Scene->RayFallback(Ray);
 	}
@@ -121,7 +99,7 @@ Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWith
 
 	// Do not scattered.
 	if(!ScatterRecord.PDF.Get()) {
-		return ScatterRecord.Attenuation * ComputeRayResultWithTime(ScatterRecord.Scattered, Depth - 1);
+		return ScatterRecord.Attenuation * ComputeRayResult(ScatterRecord.Scattered, Depth - 1);
 	}
 
 	Math::FRayWithTime Scattered;
@@ -147,7 +125,7 @@ Math::FVector4 RayTracingRenderer::ComputeRayResultWithTime(const Math::FRayWith
 	const float ScatteringPDF = Hit.Material->ScatteringPDF(Ray, Hit.Geometry, Scattered);
 
 	// Recursively ray sampling
-	const Math::FVector4 SampledColor = ComputeRayResultWithTime(Scattered, Depth - 1);
+	const Math::FVector4 SampledColor = ComputeRayResult(Scattered, Depth - 1);
 	const Math::FVector4 ScatteredColor = ScatterRecord.Attenuation * ScatteringPDF * SampledColor / PDFValue;
 	return ScatteredColor + EmittedColor;
 }

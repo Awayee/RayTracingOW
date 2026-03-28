@@ -11,7 +11,7 @@ public:
 	RTVirtualNode(RTVirtualNode&&) noexcept = default;
 	RTVirtualNode& operator=(RTVirtualNode&&)noexcept = default;
 
-	virtual bool TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
+	virtual bool TestRay(const Math::FRayWithTime& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
 	virtual Math::FAABB3 GetAABB() const override;
 private:
 	const std::vector<RTVirtualNode>& Tree;
@@ -30,7 +30,6 @@ public:
 	void AddObject(RTObjectPtr&& InObject);
 	void AddLight(TUniquePtr<RayTracingHittable>&& InLight);
 	void BuildHierarchy();
-	bool TestRay(const Math::FRay& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const;
 	bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHit) const;
 	const ObjectArray& GetLights() const;
 	Math::FVector4 RayFallback(const Math::FRay& InRay);

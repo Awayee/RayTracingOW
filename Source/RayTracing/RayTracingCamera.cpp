@@ -42,17 +42,6 @@ Math::USize RayTracingCamera::GetRenderSize() const {
 	return RenderSize;
 }
 
-Math::FRay RayTracingCamera::GetRandomRay(uint32 i, uint32 j) const {
-	FVector3 offset{ Random01() - 0.5f, Random01() - 0.5f, 0.0f }; // sample square
-	FVector3 pixelSample = PixelStart + ((float)i + offset.X) * DeltaU + ((float)j + offset.Y) * DeltaV;
-	FVector3 rayOrigin = Eye;
-	if (DefocusAngle > 0.0f) {
-		FVector2 p = RandomInDisk();
-		rayOrigin += p.X * DefocusDiskU + p.Y * DefocusDiskV;
-	}
-	return FRay{ rayOrigin, pixelSample - rayOrigin };
-}
-
 Math::FRayWithTime RayTracingCamera::GetRandomRayWithTime(uint32 i, uint32 j) const {
 	FVector3 Offset{ Random01() - 0.5f, Random01() - 0.5f, 0.0f }; // sample square
 	return GetRandomRayWithTimeOffset(i, j, Offset);

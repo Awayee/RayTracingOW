@@ -4,12 +4,8 @@
 
 RayTracingHittable::~RayTracingHittable()=default;
 
-bool RayTracingHittable::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RayTracingHittable::TestRay(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const{
 	return false;
-}
-
-bool RayTracingHittable::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
-	return TestRay((const Math::FRay&)InRay, DistanceMin, DistanceMax, OutHitSurface);
 }
 
 float RayTracingHittable::GetPDFValue(const Math::FVector3& Origin, const Math::FVector3& Direction) const {
@@ -25,7 +21,7 @@ GeometrySphere(InSphere),SurfaceMaterial(MoveTemp(InMaterial)) {
 	AABB = Math::FAABB3::CenterExtent(InSphere.Center, Math::FVector3{InSphere.Radius});
 }
 
-bool RTSphere::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RTSphere::TestRay(const Math::FRayWithTime& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
 	if(GeometrySphere.TestRay(Ray, DistanceMin, DistanceMax, OutHitSurface.Geometry)) {
 		OutHitSurface.Material = SurfaceMaterial.Get();
 		return true;
@@ -75,7 +71,7 @@ RTQuad::RTQuad(const Math::FQuad& InQuad, MaterialPtr&& InMaterial): RayTracingH
 	Area = InQuad.GetArea();
 }
 
-bool RTQuad::TestRay(const Math::FRay& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RTQuad::TestRay(const Math::FRayWithTime& Ray, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
 	if(GeometryQuad.TestRay(Ray, DistanceMin, DistanceMax, OutHitSurface.Geometry)) {
 		OutHitSurface.Material = SurfaceMaterial.Get();
 		return true;
@@ -112,7 +108,7 @@ RTSphere(InSphere, MoveTemp(InMatrial)), MoveTarget(InMoveTarget){
 	AABB.Union(TargetAABB);
 }
 
-bool RTMovableSphere::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RTMovableSphere::TestRay(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
 	const float Time = Math::Clamp(InRay.Time, 0.0f, 1.0f);
 	const Math::FVector3 MovedCenter = GeometrySphere.Center + MoveDir * MoveDistance * Time;
 	const Math::FSphere MovedSphere{MovedCenter, GeometrySphere.Radius};
@@ -130,7 +126,7 @@ RTBox::RTBox(const Math::FVector3& A, const Math::FVector3& B, MaterialPtr&& InM
 	AABB = Math::FAABB3{Min, Max};
 }
 
-bool RTBox::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RTBox::TestRay(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
 	if(Box.TestRay(InRay, DistanceMin, DistanceMax, OutHitSurface.Geometry)) {
 		OutHitSurface.Material = Material.Get();
 		return true;
@@ -140,4 +136,52 @@ bool RTBox::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, 
 
 Math::FAABB3 RTBox::GetAABB() const {
 	return AABB;
+}
+
+RTConstantMedium::RTConstantMedium(RTObjectPtr&& InObject, float InDensity, Math::Color8 Albedo) :
+	RTConstantMedium(MoveTemp(InObject), InDensity, TexturePtr(new SolidColor(Albedo))) {
+}
+
+RTConstantMedium::RTConstantMedium(RTObjectPtr&& InObject, float InDensity, TexturePtr&& InTexture) :
+	BoundaryObject(MoveTemp(InObject)) {
+	NegInvDensity = -1.0f / InDensity;
+	Material.Reset(new IsotropicMaterial(MoveTemp(InTexture)));
+}
+
+Math::FAABB3 RTConstantMedium::GetAABB() const {
+	return BoundaryObject->GetAABB();
+}
+
+bool RTConstantMedium::TestRay(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+	RayHitSurface HitSuf0, HitSuf1;
+	Math::FRayHit& Hit0 = HitSuf0.Geometry;
+	Math::FRayHit& Hit1 = HitSuf1.Geometry;
+	if (!BoundaryObject->TestRay(InRay, -FLOAT_MAX, FLOAT_MAX, HitSuf0)) {
+		return false;
+	}
+	if (!BoundaryObject->TestRay(InRay, Hit0.Distance + 0.0001f, FLOAT_MAX, HitSuf1)) {
+		return false;
+	}
+	Hit0.Distance = Math::Max(Hit0.Distance, DistanceMin);
+	Hit1.Distance = Math::Min(Hit1.Distance, DistanceMax);
+	if (Hit0.Distance >= Hit1.Distance) {
+		return false;
+	}
+	Hit0.Distance = Math::Max(Hit0.Distance, 0.0f);
+
+	const float RayLength = InRay.Direction.Length();
+	const float DistanceInsideBounddary = (Hit1.Distance - Hit0.Distance) * RayLength;
+	const float RandomLog = Math::Log(Math::Random01());
+	const float HitDistance = RandomLog * NegInvDensity;
+	if (HitDistance > DistanceInsideBounddary) {
+		return false;
+	}
+
+	OutHitSurface.Geometry.Distance = Hit0.Distance + HitDistance / RayLength;
+	OutHitSurface.Geometry.Position = InRay.At(OutHitSurface.Geometry.Distance);
+	OutHitSurface.Geometry.Normal = { 1,0,0 };
+	OutHitSurface.Geometry.Texcoord = Math::RandomInDisk();
+	OutHitSurface.Geometry.FrontFace = true;
+	OutHitSurface.Material = Material.Get();
+	return true;
 }

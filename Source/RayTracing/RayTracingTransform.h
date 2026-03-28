@@ -5,7 +5,7 @@
 class RTTranslated: public RayTracingHittable {
 public:
 	RTTranslated(RTObjectPtr&& InObject, const Math::FVector3& InTranslation);
-	virtual bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
+	virtual bool TestRay(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
 	virtual Math::FAABB3 GetAABB() const override;
 private:
 	RTObjectPtr Object;
@@ -16,7 +16,7 @@ private:
 class RTRotatedY: public RayTracingHittable {
 public:
 	RTRotatedY(RTObjectPtr&& InObject, float Radian);
-	virtual bool TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
+	virtual bool TestRay(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const override;
 	virtual Math::FAABB3 GetAABB() const override;
 private:
 	RTObjectPtr Object;

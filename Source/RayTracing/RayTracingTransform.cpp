@@ -5,9 +5,9 @@ RTTranslated::RTTranslated(RTObjectPtr&& InObject, const Math::FVector3& InTrans
 	AABB = Object->GetAABB().Translate(InTranslation);
 }
 
-bool RTTranslated::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RTTranslated::TestRay(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
 	const Math::FRayWithTime TempRay(InRay.Origin-Translation, InRay.Direction, InRay.Time);
-	if(!Object->TestRayWithTime(TempRay, DistanceMin, DistanceMax, OutHitSurface)) {
+	if(!Object->TestRay(TempRay, DistanceMin, DistanceMax, OutHitSurface)) {
 		return false;
 	}
 
@@ -25,11 +25,11 @@ RTRotatedY::RTRotatedY(RTObjectPtr&& InObject, float Radian) : Object(MoveTemp(I
 	AABB = Object->GetAABB().Rotate(RotationMatrix);
 }
 
-bool RTRotatedY::TestRayWithTime(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
+bool RTRotatedY::TestRay(const Math::FRayWithTime& InRay, float DistanceMin, float DistanceMax, RayHitSurface& OutHitSurface) const {
 	const Math::FVector3 TempRayOrigin = InvRotationMatrix * InRay.Origin;
 	const Math::FVector3 TempRayDirection = InvRotationMatrix * InRay.Direction;
 	const Math::FRayWithTime TempRay{TempRayOrigin, TempRayDirection, InRay.Time};
-	if(!Object->TestRayWithTime(TempRay, DistanceMin, DistanceMax, OutHitSurface)) {
+	if(!Object->TestRay(TempRay, DistanceMin, DistanceMax, OutHitSurface)) {
 		return false;
 	}
 
